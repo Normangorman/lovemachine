@@ -60,8 +60,9 @@ end
 
 function Hierarchy:updateWidgets(dt)
     --Work from the bottom of the stack upwards.
-    for _, widget in ipairs(self.widgets) do
+    for i, widget in ipairs(self.widgets) do
         if widget.update then widget:update(dt) end
+        if widget.closed then table.remove(self.widgets, i) end
     end
 end
 

@@ -20,6 +20,7 @@ function SpritesheetWidget.new(data, x, y)
 end
 
 function SpritesheetWidget:draw()
+    love.graphics.setColor(255,255,255)
     love.graphics.draw(self.data.image, self.x, self.y)
     self:drawGrid()
 

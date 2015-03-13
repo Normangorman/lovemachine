@@ -1,6 +1,9 @@
 require "Widget"
 require "Hierarchy"
 require "Settings"
+require "Animation"
+require "AnimationPlayer"
+require "Window"
 
 Workspace = {}
 Workspace.__index = Workspace
@@ -21,10 +24,24 @@ function Workspace.new(x,y,width,height)
     self.oldMousePosition = {x = 0, y = 0}
 
     -- Startup widgets:
-    hero_image = love.graphics.newImage("assets/hero_60x92.png")
-    spritesheetData = SpritesheetData.new(hero_image, 60, 92)
-    spritesheetWidget = SpritesheetWidget.new(spritesheetData, 100, 100)
-    self.hierarchy:addWidget(spritesheetWidget)
+    local hero_image = love.graphics.newImage("assets/hero_60x92.png")
+    local heroSpritesheetData = SpritesheetData.new(hero_image, 60, 92)
+    local heroSpritesheetWidget = SpritesheetWidget.new(heroSpritesheetData, 100, 100)
+    self.hierarchy:addWidget(heroSpritesheetWidget)
+
+    local animation_frames = {}
+    for i=1,10 do
+        table.insert(animation_frames, {x=i, y=1})
+    end
+    local heroAnimation = Animation.new(heroSpritesheetData, animation_frames, {bounce = true, delay=0.1})
+
+    local animationPlayerWindow = Window.new(100,400, 300, 300)
+
+    self.hierarchy:addWidget(animationPlayerWindow)
+
+    local heroAnimationPlayer = AnimationPlayer.new(heroAnimation, 0,0)
+    heroAnimationPlayer:play()
+    animationPlayerWindow:addWidget(heroAnimationPlayer)
 
     setmetatable(self, Workspace)
     return self 

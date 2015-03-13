@@ -6,6 +6,7 @@ function Widget.new(x,y,width,height)
     self.y = y
     self.width = width
     self.height = height
+    self.closed = false -- closed widgets will eventually be deleted from the hierarchy.
 
     return self 
 end
