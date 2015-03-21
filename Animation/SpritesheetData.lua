@@ -1,10 +1,11 @@
 SpritesheetData = {}
 SpritesheetData.__index = Spritesheet
 
-function SpritesheetData.new(image, frameWidth, frameHeight)
+function SpritesheetData.new(imagePath, frameWidth, frameHeight)
     self = {}
-    self.image = image
-    self.imageWidth, self.imageHeight = image:getDimensions()
+    self.imagePath = imagePath
+    self.image = love.graphics.newImage(imagePath)
+    self.imageWidth, self.imageHeight = self.image:getDimensions()
     self.frameWidth = frameWidth
     self.frameHeight = frameHeight
 

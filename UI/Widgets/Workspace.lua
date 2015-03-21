@@ -1,9 +1,10 @@
-require "Widget"
-require "Hierarchy"
-require "Settings"
-require "Animation"
-require "AnimationPlayer"
-require "Window"
+require "Animation.Animation"
+require "UI.Hierarchy"
+require "UI.Settings"
+require "UI.Widgets.AnimationPlayer"
+require "UI.Widgets.SpritesheetWindow"
+require "UI.Widgets.Widget"
+require "UI.Widgets.Window"
 
 Workspace = {}
 Workspace.__index = Workspace
@@ -12,7 +13,8 @@ function Workspace.new(x,y,width,height)
     local self = Widget.new(x,y,width,height)
 
     self.canvas = love.graphics.newCanvas(width, height)
-    self.hierarchy = Hierarchy.new()
+    self.staticHierarchy = Hierarchy.new(self) -- for elements like panels etc. that don't belong in the scrollable scene
+    self.hierarchy = Hierarchy.new(self)
 
     self.maxWidth = 2000
     self.maxHeight = 2000
@@ -23,25 +25,32 @@ function Workspace.new(x,y,width,height)
     self.beingDragged = false
     self.oldMousePosition = {x = 0, y = 0}
 
+
+    -- Panels:
+    local spritesheetPanel = SpritesheetPanel.new()
+    self.staticHierarchy:addWidget(spritesheetPanel)
+
     -- Startup widgets:
-    local hero_image = love.graphics.newImage("assets/hero_60x92.png")
-    local heroSpritesheetData = SpritesheetData.new(hero_image, 60, 92)
-    local heroSpritesheetWidget = SpritesheetWidget.new(heroSpritesheetData, 100, 100)
-    self.hierarchy:addWidget(heroSpritesheetWidget)
+    local hero_image_path = "UI/Assets/hero_60x92.png"
+    local heroSpritesheetWindow = SpritesheetWindow.new(spritesheetPanel, hero_image_path, 60, 92, 100, 100)
+    self.hierarchy:addWidget(heroSpritesheetWindow)
+
+    local wibletSpritesheetWindow = SpritesheetWindow.new(spritesheetPanel, "UI/Assets/wiblet_48x64.png", 48,64, 800,100)
+    self.hierarchy:addWidget(wibletSpritesheetWindow)
 
     local animation_frames = {}
     for i=1,10 do
         table.insert(animation_frames, {x=i, y=1})
     end
+
+    local heroSpritesheetData = SpritesheetData.new(hero_image_path, 60,92)
     local heroAnimation = Animation.new(heroSpritesheetData, animation_frames, {bounce = true, delay=0.1})
-
-    local animationPlayerWindow = Window.new(100,400, 300, 300)
-
-    self.hierarchy:addWidget(animationPlayerWindow)
 
     local heroAnimationPlayer = AnimationPlayer.new(heroAnimation, 0,0)
     heroAnimationPlayer:play()
-    animationPlayerWindow:addWidget(heroAnimationPlayer)
+    local animationPlayerWindow = Window.newWithWidget(100, 400, heroAnimationPlayer, {title="Preview"})
+    self.hierarchy:addWidget(animationPlayerWindow)
+
 
     setmetatable(self, Workspace)
     return self 
@@ -70,13 +79,8 @@ function Workspace:update(dt)
         self.oldMousePosition = {x = mx - dx, y = my - dy}
     end
 
-    self.hierarchy:updateWidgets(dt)
-end
-
-function Workspace:mousePositionToLocal(mx, my)
-    local local_x = mx + self.cameraPosition.x
-    local local_y = my + self.cameraPosition.y
-    return local_x, local_y
+    self.hierarchy:update(dt)
+    self.staticHierarchy:update(dt)
 end
 
 function Workspace:draw()
@@ -100,26 +104,46 @@ function Workspace:draw()
             love.graphics.line(0,y, self.maxWidth,y)
         end
 
-        self.hierarchy:drawWidgets()
+        self.hierarchy:draw()
     end)
 
     love.graphics.origin()
     love.graphics.draw(self.canvas, self.x, self.y)
-    love.graphics.print(string.format("camera x: %d\n camera y: %d", self.cameraPosition.x, self.cameraPosition.y), 10, 10)
+    love.graphics.print(string.format("camera x: %d\ncamera y: %d", self.cameraPosition.x, self.cameraPosition.y), 10, 10)
+    love.graphics.print(string.format("mouse x: %d\nmouse y: %d", self:mousePositionToLocal(love.mouse:getPosition())), 150, 10)
+
+    self.staticHierarchy:draw()
+end
+
+function Workspace:mousePositionToLocal(mx, my)
+    local local_x = mx + self.cameraPosition.x
+    local local_y = my + self.cameraPosition.y
+    return local_x, local_y
+end
+
+function Workspace:mouseover(mx,my)
+    if not self.staticHierarchy:mouseover(mx, my) then
+        self.hierarchy:mouseover( self:mousePositionToLocal(mx,my) )
+    end
 end
 
 function Workspace:mousepressed(mouse_x, mouse_y, button)
     print(string.format("Workspace was mousepressed at %d, %d with %s", mouse_x, mouse_y, button))
 
-    local mx, my = self:mousePositionToLocal( mouse_x, mouse_y )
-    local wasSomethingClicked = self.hierarchy:mousepressed(mx, my, button)
+    local wasSomethingStaticClicked = self.staticHierarchy:mousepressed(mouse_x, mouse_y)
+    if not wasSomethingStaticClicked then
 
-    if not wasSomethingClicked then
-        -- Drag the canvas
-        if button == 'l' then
-            self.beingDragged = true
-            self.oldMousePosition = {x = mx, y = my}
+        local mx, my = self:mousePositionToLocal( mouse_x, mouse_y )
+        local wasSomethingClicked = self.hierarchy:mousepressed(mx, my, button)
+
+        if not wasSomethingClicked then
+            -- Drag the canvas
+            if button == 'l' then
+                self.beingDragged = true
+                self.oldMousePosition = {x = mx, y = my}
+            end
         end
+
     end
 end
 
@@ -128,6 +152,22 @@ function Workspace:mousereleased(mouse_x, mouse_y, button)
         local mx, my = self:mousePositionToLocal( mouse_x, mouse_y )
         print(string.format("Workspace was mousereleased at %d, %d with %s", mx, my, button))
         self.beingDragged = false
+        self.staticHierarchy:mousereleased(mx, my, button)
         self.hierarchy:mousereleased(mx, my, button)
     end
+end
+
+function Workspace:textinput(text)
+    self.staticHierarchy:textinput(text)
+    self.hierarchy:textinput(text)
+end
+
+function Workspace:keypressed(key)
+    self.staticHierarchy:keypressed(key)
+    self.hierarchy:keypressed(key)
+end
+
+function Workspace:keyreleased(key)
+    self.staticHierarchy:keyreleased(key)
+    self.hierarchy:keyreleased(key)
 end

@@ -28,10 +28,6 @@ function Animation.new(spritesheetData, frames, settings)
             self.delay = settings.delay
             self.timeDelayCounter = settings.delay
         end
-        if settings.startingFrameNumber then
-            self.startingFrameNumber = settings.startingFrameNumber 
-            self.currentFrameNumber = settings.startingFrameNumber
-        end
         if settings.loop then self.loop = settings.loop end
         if settings.bounce then self.bounce = settings.bounce end
         if settings.playingDirection then self.playingDirection = settings.playingDirection end
@@ -42,23 +38,8 @@ function Animation.new(spritesheetData, frames, settings)
     return self 
 end
 
-function Animation:play()
-    self.playing = true
-end
-
-function Animation:pause()
-    self.playing = false
-end
-
-function Animation:reset()
-    self.currentFrameNumber = self.startingFrameNumber
-    self.timeDelayCounter = self.delay
-    self.playingDirection = 1
-    self.playing = false
-end
-
 function Animation:update(dt)
-    if self.playing then
+    if self.playing and self.currentFrame then
         self.timeDelayCounter = self.timeDelayCounter - dt
         if self.timeDelayCounter < 0 then
             self.timeDelayCounter = self.delay
@@ -91,11 +72,27 @@ function Animation:update(dt)
 end
 
 function Animation:draw(x,y)
-    local frame_x = (self.currentFrame.x - 1) * self.spritesheetData.frameWidth
-    local frame_y = (self.currentFrame.y - 1) * self.spritesheetData.frameHeight
-    local q = love.graphics.newQuad(frame_x, frame_y, 
-                                    self.spritesheetData.frameWidth, self.spritesheetData.frameHeight,
-                                    self.spritesheetData.imageWidth, self.spritesheetData.imageHeight)
-    love.graphics.draw(self.spritesheetData.image, q, x, y)
+    if self.currentFrame then
+        local frame_x = (self.currentFrame.x - 1) * self.spritesheetData.frameWidth
+        local frame_y = (self.currentFrame.y - 1) * self.spritesheetData.frameHeight
+        local q = love.graphics.newQuad(frame_x, frame_y, 
+                                        self.spritesheetData.frameWidth, self.spritesheetData.frameHeight,
+                                        self.spritesheetData.imageWidth, self.spritesheetData.imageHeight)
+        love.graphics.draw(self.spritesheetData.image, q, x, y)
+    end
 end
 
+function Animation:play()
+    self.playing = true
+end
+
+function Animation:pause()
+    self.playing = false
+end
+
+function Animation:reset()
+    self.currentFrameNumber = self.startingFrameNumber
+    self.timeDelayCounter = self.delay
+    self.playingDirection = 1
+    self.playing = false
+end

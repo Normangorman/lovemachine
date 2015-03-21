@@ -1,7 +1,9 @@
-require "Settings"
+require "UI.Settings"
+require "UI.Widgets.Widget"
 
 AnimationPlayer = {}
 AnimationPlayer.__index = AnimationPlayer
+setmetatable(AnimationPlayer, Widget)
 
 function AnimationPlayer.new(animation, x, y)
     local self = Widget.new(x,y, animation.width, animation.height)
@@ -12,6 +14,19 @@ function AnimationPlayer.new(animation, x, y)
 
     setmetatable(self, AnimationPlayer)
     return self
+end
+
+function AnimationPlayer:update(dt)
+    self.animation:update(dt)
+end
+
+function AnimationPlayer:draw()
+    -- Draw border
+    self.animation:draw(self.x, self.y)
+end
+
+function AnimationPlayer:changeAnimation(newAnimation)
+    self.animation = newAnimation
 end
 
 function AnimationPlayer:prevFrame()
@@ -28,13 +43,4 @@ end
 
 function AnimationPlayer:pause()
     self.animation:pause()
-end
-
-function AnimationPlayer:update(dt)
-    self.animation:update(dt)
-end
-
-function AnimationPlayer:draw()
-    -- Draw border
-    self.animation:draw(self.x, self.y)
 end

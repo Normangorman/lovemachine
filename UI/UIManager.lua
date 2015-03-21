@@ -1,17 +1,18 @@
-require "Hierarchy"
+require "UI.Hierarchy"
 
 UIManager = {}
 UIManager.__index = UIManager
 
 function UIManager.new()
     local self = {}
-    self.hierarchy = Hierarchy.new()
+    self.hierarchy = Hierarchy.new() -- by passing no arguments, this Hierarchy is the root hierarchy.
     self.widgetCount = 0
     setmetatable(self, UIManager)
     return self 
 end
 
 function UIManager:registerEvents()
+    love.keyboard.setKeyRepeat(true)
     local callbacks = {'keypressed', 'keyreleased', 'mousepressed', 'mousereleased', 'mousefocus', 'gamepadpressed', 'gamepadreleased', 'gamepadaxis', 'textinput'}
     local old_functions = {}
     local empty_function = function() end
@@ -28,18 +29,23 @@ function UIManager:addWidget(w)
     self.hierarchy:addWidget(w)
 end
 
-function UIManager:updateWidgets(dt)
-    self.hierarchy:updateWidgets(dt)
+function UIManager:update(dt)
+    self.hierarchy:update(dt)
+    -- This order is important and allows widgets to set, for example, self.isMouseover = false in their update
+    self.hierarchy:mouseover(love.mouse.getPosition())
 end
 
-function UIManager:drawWidgets()
-    self.hierarchy:drawWidgets()
+function UIManager:draw()
+    self.hierarchy:draw()
 end
 
 function UIManager:keypressed(key)
+    print("UIManager:keypressed - key was pressed: " .. key)
+    self.hierarchy:keypressed(key)
 end
 
 function UIManager:keyreleased(key)
+    self.hierarchy:keyreleased(key)
 end
 
 function UIManager:mousepressed(x,y,button)
@@ -64,4 +70,5 @@ function UIManager:gamepadaxis(joystick, axis, value)
 end
 
 function UIManager:textinput(text)
+    self.hierarchy:textinput(text)
 end
