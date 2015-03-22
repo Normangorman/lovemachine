@@ -112,13 +112,13 @@ function Hierarchy:getWidgetsWithClass(class)
     for i, w in ipairs(self.widgets) do
         -- Iterate through the widgets classes to see if the class in question is there.
         for _, c in ipairs(w._classes) do
-            print("Considering class: "..c)
             if c == class then
                 table.insert(ws, w)
                 break
             end
         end
     end
+    print(string.format("Found %d widgets", #ws))
     return ws
 end
 

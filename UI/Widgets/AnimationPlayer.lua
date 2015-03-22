@@ -12,6 +12,8 @@ function AnimationPlayer.new(animation, x, y)
     self.x = x
     self.y = y
 
+    self.backgroundColor = Settings.animationPlayerBackgroundColor
+
     setmetatable(self, AnimationPlayer)
     return self
 end
@@ -21,11 +23,15 @@ function AnimationPlayer:update(dt)
 end
 
 function AnimationPlayer:draw()
-    -- Draw border
+    love.graphics.setColor( unpack(self.backgroundColor) )
+    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
+    love.graphics.setColor(255,255,255)
+
     self.animation:draw(self.x, self.y)
 end
 
 function AnimationPlayer:changeAnimation(newAnimation)
+    newAnimation:play()
     self.animation = newAnimation
 end
 

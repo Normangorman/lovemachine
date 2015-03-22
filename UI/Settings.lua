@@ -1,6 +1,13 @@
 Settings = {
+    animationPlayerBackgroundColor = {42,46,46},
+
     closeButtonInactiveImagePath = "UI/Assets/close_button_dark_9x9.png",
     closeButtonActiveImagePath = "UI/Assets/close_button_light_9x9.png",
+
+    checkboxBackgroundColor = {52,56,56},
+    checkboxBorderColor = {160,133,133},
+    checkboxCheckColor = {255,255,255},
+    checkboxDefaultSize = 10,
 
     defaultAnimationFrameDuration = 0.25,
     defaultTextColor = {255,255,255,255},

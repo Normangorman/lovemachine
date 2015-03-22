@@ -6,24 +6,29 @@ Window = {}
 Window.__index = Window
 setmetatable(Window, Widget)
 
-function Window.new(x,y, width,height, settings) local self = Widget.new(x, y, width, height)
+function Window.new(x,y, width,height, settings)
+    local self = Widget.new(x, y, width, height)
+    self.hasTitle = true
     self.title = "Untitled"
+    self.isMouseover = false 
+    self.beingDragged = false
+    self.closable = true
+    self.draggable = true
+
+    self.hierarchy = Hierarchy.new(self)
+
+    if settings then
+        for k, v in pairs(settings) do
+            self[k] = v
+        end
+    end
+
     self.borderSize = Settings.windowBorderSize
     self.borderColor = Settings.windowBorderColor
     self.mouseoverBorderColor = Settings.windowMouseoverBorderColor
     self.backgroundColor = Settings.windowBackgroundColor
     self.statusBarTextPadding = Settings.windowStatusBarTextPadding
     self.statusBarHeight = Window.getStatusBarHeight()
-
-    self.hierarchy = Hierarchy.new(self)
-    self.isMouseover = false 
-    self.beingDragged = false
-    self.closable = true
-
-    if settings then
-        if settings.title then self.title = settings.title end
-        if settings.closable then self.closable = settings.closable end
-    end
 
     setmetatable(self, Window)
     if self.closable then -- make a close button
@@ -44,7 +49,7 @@ function Window.newWithWidget(x,y,widget,settings)
 end
 
 function Window:update(dt)
-    if self.beingDragged then
+    if self.draggable and self.beingDragged then
         mx, my = love.mouse.getPosition()
         dx, dy = mx - self.oldMousePosition.x, my - self.oldMousePosition.y
         self.x = self.x + dx
@@ -52,6 +57,7 @@ function Window:update(dt)
         self.hierarchy:translate(dx,dy)
         self.oldMousePosition = {x=mx, y=my}
     end
+
     self.hierarchy:update(dt)
     self.isMouseover = false
 end
@@ -66,11 +72,13 @@ function Window:draw()
     love.graphics.rectangle("fill", self.x, self.y,
                                     self.width, self.height)
 
-    -- Draw status bar
-    love.graphics.rectangle("fill", self.x, self.y, self.width, self.statusBarHeight) 
-    love.graphics.setColor(255,255,255)
-    love.graphics.printf(self.title, self.x + self.statusBarTextPadding,
-                         self.y + self.statusBarTextPadding, self.width - self.statusBarTextPadding)
+    if self.hasTitle then
+        -- Draw status bar
+        love.graphics.rectangle("fill", self.x, self.y, self.width, self.statusBarHeight) 
+        love.graphics.setColor(255,255,255)
+        love.graphics.printf(self.title, self.x + self.statusBarTextPadding,
+                             self.y + self.statusBarTextPadding, self.width - self.statusBarTextPadding)
+    end
 
     -- Draw background
     love.graphics.setColor( unpack(self.backgroundColor) )

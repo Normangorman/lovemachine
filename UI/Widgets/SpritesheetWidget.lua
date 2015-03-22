@@ -18,6 +18,11 @@ function SpritesheetWidget.new(panel, data, x, y)
     self.frameSelectedFillColor = Settings.spritesheetFrameSelectedFillColor
 
     self.selectedFrames = {}
+    self.animationSettings = {
+        loop = true,
+        bounce = false,
+        defaultDuration = Settings.defaultAnimationFrameDuration,
+    }
     self.mouseoverFrame = {x=0, y=0}
 
     setmetatable(self, SpritesheetWidget)
@@ -144,7 +149,14 @@ function SpritesheetWidget:mousepressed(mouse_x, mouse_y, button)
         if button == 'l' then
             self:toggleFrameSelected(frame_x, frame_y)
         elseif button == 'r' then
-            self.panel:selectFrame{x=frame_x, y=frame_y}
+            -- Right click selects a frame if it is already highlighted, thus it is possible this is called
+            -- on a frame that isn't already selected. If this happens, don't do anything.
+            for _, f in ipairs(self.selectedFrames) do
+                if f.x == frame_x and f.y == frame_y then
+                    self.panel:selectFrame(f)
+                    break
+                end
+            end
         end
     end
 end

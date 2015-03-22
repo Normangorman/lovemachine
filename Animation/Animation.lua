@@ -1,89 +1,148 @@
 Animation = {}
 Animation.__index = Animation
 
-function Animation.new(spritesheetData, frames, settings)
-    -- frames is a list of frame objects e.g. {x=1, y=3, duration=0.2, callback=function()...end, ownerCallback="foo" }
+function Animation.new(spritesheetData, frames, settings, owner, onFinishCallback)
+    -- required spritesheetData:  A SpritesheetData object.
+    --
+    -- required frames: A list of frame objects which must have the following fields:
+    --  - integer x: x-coordinate in the spritesheet.
+    --  - integer y: y-coordinate in the spritesheet.
+    --  And may have any of the following fields:
+    --  - float duration: frame duration in seconds.
+    --  - string callback: the name of a function to call on the animation's owner when the frame is played.
+    --  
+    -- optional settings: An optional table of keys and values. Available settings are:
+    --  - float defaultDuration: the default duration in seconds for frames.
+    --  - boolean loop: should the animation begin again from the beginning once finished?
+    --  - boolean bounce: should the animation play backwards upon reaching the final frame / returning to the starting frame. 
+    --  - boolean drawOnFinish: should the final frame continue to be drawn after the animation has finished?
+    --  - integer playingDirection: either 1 or -1. If 1, advance forwards through the frames. If -1 then start at the end and go backwards.
+    --
+    -- optional owner: Any table is a valid owner. Frames which have callbacks will attempt to call a field on the owner.
+    --
+    -- optional onFinishCallback: Function to call when the animation finishes.
+    
+    if not spritesheetData then
+        print "[ERROR] Animation.new - spritesheetData was nil. Returning nil."
+        return nil
+    elseif not frames then
+        print "[ERROR] Animation.new - no frames were given. Returning nil."
+        return nil
+    elseif #frames == 0 then
+        print "[ERROR] Animation.new - empty list of frames. Returning nil."
+        return nil
+    end
+    
     local self = {}
-    self.spritesheetData = spritesheetData
-    self.width = spritesheetData.frameWidth
-    self.height = spritesheetData.frameHeight
-    self.frames = frames
-    self.numFrames = #self.frames -- calculated here so it doesn't have to be recomputed all the time.
+    self.spritesheetData  = spritesheetData
+    self.frames           = frames
+    self.owner            = owner
+    self.onFinishCallback = onFinishCallback
 
-    -- Set defaults 
-    self.delay = 0.25
-    self.playing = false
-    self.timeDelayCounter = self.delay
-    self.startingFrameNumber = 1
-    self.currentFrameNumber = 1
-    self.currentFrame = self.frames[ self.currentFrameNumber ]
-    self.loop = true -- should I begin again from frame 1 upon ending?
-    self.bounce = false -- should I play back in reverse upon hitting the first/last frame?
-    self.playingDirection = 1 -- should I advance forwards or backwards through the frames?
-    self.owner = nil
-
+    -- Default settings: 
+    self.defaultDuration         = 0.2
+    self.loop                    = true 
+    self.bounce                  = false
+    self.initialPlayingDirection = 1
+    self.drawOnFinish            = true
+ 
     -- Override defaults if present in settings
     if settings then
-        if settings.delay then
-            self.delay = settings.delay
-            self.timeDelayCounter = settings.delay
-        end
-        if settings.loop then self.loop = settings.loop end
-        if settings.bounce then self.bounce = settings.bounce end
-        if settings.playingDirection then self.playingDirection = settings.playingDirection end
-        if settings.owner then self.owner = settings.owner end
+        if settings.defaultDuration     then self.defaultDuration         = settings.defaultDuration  end
+        if settings.loop   ~= nil       then self.loop                    = settings.loop             end
+        if settings.bounce ~= nil       then self.bounce                  = settings.bounce           end
+        if settings.playingDirection    then self.initialPlayingDirection = settings.playingDirection end
+        if settings.drawOnFinish ~= nil then self.drawOnFinish            = settings.drawOnFinish     end
     end
 
+    -- Internal settings:
+    self.numFrames         = #frames
+    self.width             = spritesheetData.frameWidth
+    self.height            = spritesheetData.frameHeight
+    self.playing           = false
+    if self.initialPlayingDirection == 1 then
+        self.currentFrameIndex = 1
+    else
+        self.currentFrameIndex = #frames
+    end
+    self.currentPlayingDirection = self.initialPlayingDirection
+    self.durationTimer           = self.frames[self.currentFrameIndex].duration or self.defaultDuration 
+
+    print("New animation made with loop="..tostring(self.loop))
     setmetatable(self, Animation)
     return self 
 end
 
 function Animation:update(dt)
-    if self.playing and self.currentFrame then
-        self.timeDelayCounter = self.timeDelayCounter - dt
-        if self.timeDelayCounter < 0 then
-            self.timeDelayCounter = self.delay
-            self.currentFrameNumber = self.currentFrameNumber + self.playingDirection
+    if not self.playing then return end
 
-            if self.currentFrameNumber > self.numFrames then
-                if self.bounce then
-                    self.currentFrameNumber = self.numFrames - 1
-                    self.playingDirection = -1 
-                elseif self.loop then
-                    self.currentFrameNumber = 1
+    self.durationTimer = self.durationTimer - dt
+    if self.durationTimer < 0 then 
+        self.currentFrameIndex = self.currentFrameIndex + self.currentPlayingDirection
+        
+        -- Direction switching logic:
+        if self.currentFrameIndex > self.numFrames then
+            if self.bounce then
+                if self.loop or self.initialPlayingDirection == 1 then 
+                    self.currentFrameIndex = self.numFrames - 1
+                    self.currentPlayingDirection = -1 
                 else
-                    self.playing = false
+                    self:_finish()
+                    return
                 end
-            elseif self.currentFrameNumber < 1 then
-                if self.bounce then
-                    self.currentFrameNumber = 2
-                    self.playingDirection = 1
-                else
-                    self.playing = false
-                end
+            elseif self.loop then
+                self.currentFrameIndex = 1
+            else
+                self:_finish()
+                return
             end
-
-            self.currentFrame = self.frames[self.currentFrameNumber]
-            if self.currentFrame.duration then self.timeDelayCounter = frame.duration end
-            if self.currentFrame.callback then frame.callback() end
-            if self.currentFrame.ownerCallback and self.owner then self.owner[frame.ownerCallback]() end
+        elseif self.currentFrameIndex < 1 then
+            if self.bounce then
+                if self.loop or self.initialPlayingDirection == -1 then
+                    self.currentFrameIndex = 1
+                    self.currentPlayingDirection = 1
+                else
+                    self:_finish()
+                    return
+                end
+            elseif self.loop then
+                self.currentFrameIndex = self.numFrames
+            else
+                self:_finish()
+                return
+            end
         end
+
+        -- Reset durationTimer and call the frame's callback if it has one.
+        local currentFrame = self.frames[self.currentFrameIndex]
+
+        self.durationTimer = currentFrame.duration or self.defaultDuration
+
+        if currentFrame.callback then
+            if self.owner then 
+                if self.owner[currentFrame.callback] then
+                    self.owner[currentFrame.callback]()
+                else
+                    printf("[WARNING] Animation:update - a frame has a callback named '%s' but the animation owner has no property named '%s'.", currentFrame.callback, currentFrame.callback)
+                end
+            else
+                printf("[WARNING] Animation:update - a frame has a callback named '%s' but the animation has no owner.", currentFrame.callback)
+            end
+        end
+
+        self:_setCurrentFrameQuad()
     end
 end
 
 function Animation:draw(x,y)
-    if self.currentFrame then
-        local frame_x = (self.currentFrame.x - 1) * self.spritesheetData.frameWidth
-        local frame_y = (self.currentFrame.y - 1) * self.spritesheetData.frameHeight
-        local q = love.graphics.newQuad(frame_x, frame_y, 
-                                        self.spritesheetData.frameWidth, self.spritesheetData.frameHeight,
-                                        self.spritesheetData.imageWidth, self.spritesheetData.imageHeight)
-        love.graphics.draw(self.spritesheetData.image, q, x, y)
+    if self.playing or self.drawOnFinish then
+        love.graphics.draw(self.spritesheetData.image, self.currentFrameQuad, x, y)
     end
 end
 
 function Animation:play()
     self.playing = true
+    self:_setCurrentFrameQuad()
 end
 
 function Animation:pause()
@@ -91,8 +150,35 @@ function Animation:pause()
 end
 
 function Animation:reset()
-    self.currentFrameNumber = self.startingFrameNumber
-    self.timeDelayCounter = self.delay
-    self.playingDirection = 1
+    if self.initialPlayingDirection == 1 then
+        self.currentFrameIndex = 1
+    else
+        self.currentFrameIndex = self.numFrames
+    end
+    self.durationTimer = self.frames[self.currentFrameIndex].duration or self.defaultDuration 
+    self.playingDirection = self.initialPlayingDirection 
     self.playing = false
+    self:_setCurrentFrameQuad()
+end
+
+-- Private functions:
+function Animation:_finish()
+    print "Animation finished."
+    self.playing = false
+
+    if self.onFinishCallback then
+        self.onFinishCallback()
+    end
+end
+
+function Animation:_setCurrentFrameQuad()
+    -- By storing the quad it doesn't have to be recomputed all the time:
+    local currentFrame = self.frames[ self.currentFrameIndex ]
+    local frameWidth, frameHeight = self.spritesheetData.frameWidth, self.spritesheetData.frameHeight
+    local imageWidth, imageHeight = self.spritesheetData.imageWidth, self.spritesheetData.imageHeight
+
+    local frame_x = (currentFrame.x - 1) * frameWidth
+    local frame_y = (currentFrame.y - 1) * frameHeight
+
+    self.currentFrameQuad = love.graphics.newQuad(frame_x, frame_y, frameWidth, frameHeight, imageWidth, imageHeight)
 end

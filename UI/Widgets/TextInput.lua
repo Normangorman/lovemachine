@@ -110,6 +110,7 @@ function TextInput:mousepressed(mx, my, button)
     end
 
     self.selected = true
+    self.cursorPosition = 1
 end
 
 function TextInput:textinput(c)

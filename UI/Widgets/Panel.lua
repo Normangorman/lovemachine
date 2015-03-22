@@ -56,3 +56,12 @@ end
 function Panel:keyreleased(key)
     self.hierarchy:keyreleased(key)
 end
+
+-- The maximum width / height a widget can have.
+function Panel:getMaxWidth()
+    return self.width - 2 * self.padding
+end
+
+function Panel:getMaxHeight()
+    return self.height - 2 * self.padding
+end
