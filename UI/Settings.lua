@@ -1,5 +1,9 @@
 Settings = {
     animationPlayerBackgroundColor = {42,46,46},
+    
+    buttonBorderColor = {160,133,133},
+    buttonBackgroundColor = {52,56,56},
+    buttonMouseoverBackgroundColor = {62,66,66},
 
     closeButtonInactiveImagePath = "UI/Assets/close_button_dark_9x9.png",
     closeButtonActiveImagePath = "UI/Assets/close_button_light_9x9.png",

@@ -11,16 +11,14 @@ function Animation.new(spritesheetData, frames, settings, owner, onFinishCallbac
     --  - float duration: frame duration in seconds.
     --  - string callback: the name of a function to call on the animation's owner when the frame is played.
     --  
-    -- optional settings: An optional table of keys and values. Available settings are:
+    -- optional settings: 
     --  - float defaultDuration: the default duration in seconds for frames.
     --  - boolean loop: should the animation begin again from the beginning once finished?
     --  - boolean bounce: should the animation play backwards upon reaching the final frame / returning to the starting frame. 
     --  - boolean drawOnFinish: should the final frame continue to be drawn after the animation has finished?
     --  - integer playingDirection: either 1 or -1. If 1, advance forwards through the frames. If -1 then start at the end and go backwards.
-    --
-    -- optional owner: Any table is a valid owner. Frames which have callbacks will attempt to call a field on the owner.
-    --
-    -- optional onFinishCallback: Function to call when the animation finishes.
+    --  - table owner: Any table is a valid owner. Frames which have callbacks will attempt to call a field on the owner.
+    --  - function onFinishCallback: Call this when the animation finishes.
     
     if not spritesheetData then
         print "[ERROR] Animation.new - spritesheetData was nil. Returning nil."
@@ -36,8 +34,6 @@ function Animation.new(spritesheetData, frames, settings, owner, onFinishCallbac
     local self = {}
     self.spritesheetData  = spritesheetData
     self.frames           = frames
-    self.owner            = owner
-    self.onFinishCallback = onFinishCallback
 
     -- Default settings: 
     self.defaultDuration         = 0.2
@@ -53,6 +49,8 @@ function Animation.new(spritesheetData, frames, settings, owner, onFinishCallbac
         if settings.bounce ~= nil       then self.bounce                  = settings.bounce           end
         if settings.playingDirection    then self.initialPlayingDirection = settings.playingDirection end
         if settings.drawOnFinish ~= nil then self.drawOnFinish            = settings.drawOnFinish     end
+        if settings.owner               then self.owner                   = settings.owner            end
+        if settings.onFinishCallback    then self.onFinishCallback        = settings.onFinishCallback end
     end
 
     -- Internal settings:
@@ -68,7 +66,6 @@ function Animation.new(spritesheetData, frames, settings, owner, onFinishCallbac
     self.currentPlayingDirection = self.initialPlayingDirection
     self.durationTimer           = self.frames[self.currentFrameIndex].duration or self.defaultDuration 
 
-    print("New animation made with loop="..tostring(self.loop))
     setmetatable(self, Animation)
     return self 
 end

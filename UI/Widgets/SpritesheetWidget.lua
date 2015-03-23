@@ -21,6 +21,7 @@ function SpritesheetWidget.new(panel, data, x, y)
     self.animationSettings = {
         loop = true,
         bounce = false,
+        drawOnFinish = true,
         defaultDuration = Settings.defaultAnimationFrameDuration,
     }
     self.mouseoverFrame = {x=0, y=0}

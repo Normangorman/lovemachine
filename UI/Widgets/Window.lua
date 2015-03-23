@@ -32,7 +32,13 @@ function Window.new(x,y, width,height, settings)
 
     setmetatable(self, Window)
     if self.closable then -- make a close button
-        self:addButton(Button.new(0,0, function() self:close() end))
+        local closeButtonImage = love.graphics.newImage(Settings.closeButtonInactiveImagePath)
+        local closeButtonMouseoverImage = love.graphics.newImage(Settings.closeButtonActiveImagePath)
+        self:addButton(Button.new(0,0, nil, nil, {
+            callback = function() self:close() end,
+            image = closeButtonImage,
+            mouseoverImage = closeButtonMouseoverImage
+        }))
     end
 
     return self 

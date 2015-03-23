@@ -12,18 +12,21 @@ Workspace.__index = Workspace
 function Workspace.new(x,y,width,height)
     local self = Widget.new(x,y,width,height)
 
-    self.canvas = love.graphics.newCanvas(width, height)
     self.staticHierarchy = Hierarchy.new(self) -- for elements like panels etc. that don't belong in the scrollable scene
     self.hierarchy = Hierarchy.new(self)
 
-    self.maxWidth = 2000
-    self.maxHeight = 2000
-    self.backgroundColor = Settings.workspaceBackgroundColor
-    self.gridLineColor = Settings.workspaceGridLineColor
+    local window_width, window_height = love.window.getDimensions()
+    self.maxWidth = window_width * 1.2
+    self.maxHeight = window_height  * 1.2
+    self.cameraPosition = {
+        x = self.maxWidth / 2 - window_width / 2,
+        y = self.maxHeight / 2 - window_height / 2
+    }
 
-    self.cameraPosition = {x = 0, y = 0}
     self.beingDragged = false
     self.oldMousePosition = {x = 0, y = 0}
+    self.backgroundColor = Settings.workspaceBackgroundColor
+    self.gridLineColor = Settings.workspaceGridLineColor
 
 
     -- Panels:
@@ -45,12 +48,6 @@ function Workspace.new(x,y,width,height)
 
     local heroSpritesheetData = SpritesheetData.new(hero_image_path, 60,92)
     local heroAnimation = Animation.new(heroSpritesheetData, animation_frames, {bounce = true, delay=0.1})
-
-    local heroAnimationPlayer = AnimationPlayer.new(heroAnimation, 0,0)
-    heroAnimationPlayer:play()
-    local animationPlayerWindow = Window.newWithWidget(100, 400, heroAnimationPlayer, {title="Preview"})
-    self.hierarchy:addWidget(animationPlayerWindow)
-
 
     setmetatable(self, Workspace)
     return self 
@@ -84,31 +81,27 @@ function Workspace:update(dt)
 end
 
 function Workspace:draw()
-    self.canvas:renderTo(function()
-        self.canvas:clear()
-        love.graphics.translate(-1*self.cameraPosition.x, -1*self.cameraPosition.y)
+    love.graphics.translate(-1*self.cameraPosition.x, -1*self.cameraPosition.y)
 
-        -- draw background:
-        love.graphics.setColor( unpack(self.backgroundColor) )
-        love.graphics.rectangle('fill', 0, 0, self.maxWidth, self.maxHeight)
+    -- draw background:
+    love.graphics.setColor( unpack(self.backgroundColor) )
+    love.graphics.rectangle('fill', 0, 0, self.maxWidth, self.maxHeight)
 
-        -- draw grid pattern:
-        -- vertical lines
-        love.graphics.setColor( unpack(self.gridLineColor) )
-        for x=1, self.maxWidth, 100 do
-            love.graphics.line(x,0, x,self.maxHeight)
-        end
+    -- draw grid pattern:
+    -- vertical lines
+    love.graphics.setColor( unpack(self.gridLineColor) )
+    for x=1, self.maxWidth, 100 do
+        love.graphics.line(x,0, x,self.maxHeight)
+    end
 
-        -- horizontal lines
-        for y=1, self.maxHeight, 100 do
-            love.graphics.line(0,y, self.maxWidth,y)
-        end
+    -- horizontal lines
+    for y=1, self.maxHeight, 100 do
+        love.graphics.line(0,y, self.maxWidth,y)
+    end
 
-        self.hierarchy:draw()
-    end)
+    self.hierarchy:draw()
 
     love.graphics.origin()
-    love.graphics.draw(self.canvas, self.x, self.y)
     love.graphics.print(string.format("camera x: %d\ncamera y: %d", self.cameraPosition.x, self.cameraPosition.y), 10, 10)
     love.graphics.print(string.format("mouse x: %d\nmouse y: %d", self:mousePositionToLocal(love.mouse:getPosition())), 150, 10)
 
@@ -131,6 +124,7 @@ function Workspace:mousepressed(mouse_x, mouse_y, button)
     print(string.format("Workspace was mousepressed at %d, %d with %s", mouse_x, mouse_y, button))
 
     local wasSomethingStaticClicked = self.staticHierarchy:mousepressed(mouse_x, mouse_y)
+    print("wasSomethingStaticClicked?", tostring(wasSomethingStaticClicked))
     if not wasSomethingStaticClicked then
 
         local mx, my = self:mousePositionToLocal( mouse_x, mouse_y )

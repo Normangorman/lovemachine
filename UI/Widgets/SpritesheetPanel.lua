@@ -46,8 +46,7 @@ function SpritesheetPanel:setSpritesheetWidget(newWidget)
 end
 
 function SpritesheetPanel:addWidget(w)
-    w.x = w.x + self.x + self.padding
-    w.y = w.y + self.y + self.padding
+    w:translate(self.x + self.padding, self.y + self.padding)
     self.hierarchy:addWidget(w)
 end
 
@@ -89,7 +88,7 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
     local title = Text.new("Animation preview:", 0, ypos, maxWidth)
     title:addClasses{"animation_preview"}
     self:addWidget(title)
-    ypos = ypos + love.graphics.getFont():getHeight() + 2
+    ypos = ypos + title.height + 5
     
     -- Animation player
     local animation = Animation.new(self.spritesheetWidget.data, self.spritesheetWidget.selectedFrames, self.animationSettings)
@@ -105,12 +104,13 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
     self:addWidget(loopLabel)
 
     -- Loop checkbox
-    local loopCheckbox = Checkbox.new(true, 60, ypos, function(checkboxState)
+    local loopSetting = self.spritesheetWidget.animationSettings.loop
+    local loopCheckbox = Checkbox.new(loopSetting, 120, ypos, function(checkboxState)
         self:changeAnimationSettingLoop(checkboxState)
     end)
     loopCheckbox:addClasses{"animation_preview"}
     self:addWidget(loopCheckbox)
-    ypos = ypos + love.graphics.getFont():getHeight() + 2
+    ypos = ypos + loopCheckbox.height + 5
 
     -- Bounce label
     local bounceLabel = Text.new("Bounce?", 0, ypos, maxWidth)
@@ -118,12 +118,53 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
     self:addWidget(bounceLabel)
     
     -- Bounce checkbox
-    local bounceCheckbox = Checkbox.new(false, 60, ypos, function(checkboxState)
+    local bounceSetting = self.spritesheetWidget.animationSettings.bounce
+    local bounceCheckbox = Checkbox.new(bounceSetting, 120, ypos, function(checkboxState)
         self:changeAnimationSettingBounce(checkboxState)
     end)
     bounceCheckbox:addClasses{"animation_preview"}
     self:addWidget(bounceCheckbox)
-    ypos = ypos + love.graphics.getFont():getHeight() + 2
+    ypos = ypos + bounceCheckbox.height + 5
+
+    -- Draw on finish label
+    local drawOnFinishLabel = Text.new("Draw on finish?", 0, ypos, maxWidth)
+    drawOnFinishLabel:addClasses{"animation_preview"}
+    self:addWidget(drawOnFinishLabel)
+
+    -- Draw on finish checkbox
+    local drawOnFinishSetting = self.spritesheetWidget.animationSettings.drawOnFinish
+    local drawOnFinishCheckbox = Checkbox.new(drawOnFinishSetting, 120, ypos, function(checkboxState)
+        self:changeAnimationSettingsDrawOnFinish(checkboxState)
+    end)
+    drawOnFinishCheckbox:addClasses{"animation_preview"}
+    self:addWidget(drawOnFinishCheckbox)
+    ypos = ypos + drawOnFinishCheckbox.height + 5
+
+    -- Default duration label
+    local defaultDurationLabel = Text.new("Default duration?", 0, ypos, maxWidth)
+    defaultDurationLabel:addClasses{"animation_preview"}
+    self:addWidget(defaultDurationLabel)
+    
+    -- Default duration input
+    local defaultDurationSetting = self.spritesheetWidget.animationSettings.defaultDuration 
+    local defaultDurationInput = TextInput.new(120, ypos, 60, function(text)
+        self:changeAnimationSettingsDefaultDuration(text)
+    end)
+    defaultDurationInput:addClasses{"animation_preview"}
+    if defaultDurationSetting then
+        defaultDurationInput:setText( tostring(defaultDurationSetting) )
+    end
+    self:addWidget(defaultDurationInput)
+    ypos = ypos + defaultDurationInput.height + 5
+
+    -- Save animation button
+    -- Located at the bottom of the panel, so not in the usual area.
+    local saveAnimationButton = Button.new(0, love.window.getHeight() - 60, maxWidth, 50, {
+        callback=function() self:saveAnimation() end,
+        text = "Save animation"
+    })
+    saveAnimationButton:addClasses{"animation_preview"}
+    self:addWidget(saveAnimationButton)
 end
 
 function SpritesheetPanel:refreshAnimationPreview()
@@ -148,7 +189,7 @@ function SpritesheetPanel:populateSelectedFrameWidgets()
     self.hierarchy:deleteWidgetsWithClass("selected_frame")
 
     local maxWidth = self:getMaxWidth()
-    local ypos = 300
+    local ypos = 340
 
     -- Title
     local titleText = string.format("Frame selected: {%d, %d}", self.selectedFrame.x, self.selectedFrame.y)
@@ -284,4 +325,21 @@ end
 function SpritesheetPanel:changeAnimationSettingBounce(checkboxState)
     self.spritesheetWidget.animationSettings.bounce = checkboxState
     self:refreshAnimationPreview()
+end
+
+function SpritesheetPanel:changeAnimationSettingsDrawOnFinish(checkboxState)
+    self.spritesheetWidget.animationSettings.drawOnFinish = checkboxState
+    self:refreshAnimationPreview()
+end
+
+function SpritesheetPanel:changeAnimationSettingsDefaultDuration(text)
+    local num = tonumber(text)
+    if num then
+        print "Chaning default duration..."
+        self.spritesheetWidget.animationSettings.defaultDuration = num
+        self:refreshAnimationPreview()
+    end
+end
+
+function SpritesheetPanel:saveAnimation()
 end
