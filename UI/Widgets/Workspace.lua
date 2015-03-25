@@ -3,6 +3,7 @@ require "UI.Hierarchy"
 require "UI.Settings"
 require "UI.Widgets.AnimationPlayer"
 require "UI.Widgets.SpritesheetWindow"
+require "UI.Widgets.SpritesheetPanel"
 require "UI.Widgets.Widget"
 require "UI.Widgets.Window"
 
@@ -40,14 +41,6 @@ function Workspace.new(x,y,width,height)
 
     local wibletSpritesheetWindow = SpritesheetWindow.new(spritesheetPanel, "UI/Assets/wiblet_48x64.png", 48,64, 800,100)
     self.hierarchy:addWidget(wibletSpritesheetWindow)
-
-    local animation_frames = {}
-    for i=1,10 do
-        table.insert(animation_frames, {x=i, y=1})
-    end
-
-    local heroSpritesheetData = SpritesheetData.new(hero_image_path, 60,92)
-    local heroAnimation = Animation.new(heroSpritesheetData, animation_frames, {bounce = true, delay=0.1})
 
     setmetatable(self, Workspace)
     return self 
@@ -123,7 +116,7 @@ end
 function Workspace:mousepressed(mouse_x, mouse_y, button)
     print(string.format("Workspace was mousepressed at %d, %d with %s", mouse_x, mouse_y, button))
 
-    local wasSomethingStaticClicked = self.staticHierarchy:mousepressed(mouse_x, mouse_y)
+    local wasSomethingStaticClicked = self.staticHierarchy:mousepressed(mouse_x, mouse_y, button)
     print("wasSomethingStaticClicked?", tostring(wasSomethingStaticClicked))
     if not wasSomethingStaticClicked then
 

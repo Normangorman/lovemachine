@@ -97,6 +97,14 @@ function Window:draw()
     self.hierarchy:draw()
 end
 
+function Window:getInnerWidth()
+    return self.width - self.borderSize * 2
+end
+
+function Window:getInnerHeight()
+    return self.height - self.statusBarHeight - self.borderSize
+end
+
 function Window.getStatusBarHeight()
     return love.graphics.getFont():getHeight() + 2 * Settings.windowStatusBarTextPadding   
 end

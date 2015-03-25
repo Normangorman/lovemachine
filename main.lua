@@ -1,8 +1,4 @@
-require "Animation.Animation"
-require "Animation.SpritesheetData"
 require "UI.UIManager"
-require "UI.Widgets.SpritesheetPanel"
-require "UI.Widgets.SpritesheetWidget"
 require "UI.Widgets.Workspace" 
 
 local UI
@@ -16,6 +12,12 @@ function love.load()
 
     local workspace = Workspace.new(0,0, love.window.getWidth(), love.window.getHeight())
     UI:addWidget(workspace)
+end
+
+function love.keypressed(key)
+    if key == 'a' then
+        UI:addWidget(AlertWindow.new("FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO"))
+    end
 end
 
 function love.update(dt)

@@ -95,7 +95,6 @@ function Hierarchy:addWidget(widget)
     widget._id = self.widgetCount 
     widget._parentHierarchy = self
     table.insert(self.widgets, widget)
-    print("Hierarchy: added a widget with id number "..self.widgetCount)
 end
 
 function Hierarchy:removeWidget(id)

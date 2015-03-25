@@ -1,5 +1,6 @@
 Settings = {
     animationPlayerBackgroundColor = {42,46,46},
+    animationSaveFolderName = "Animations",
     
     buttonBorderColor = {160,133,133},
     buttonBackgroundColor = {52,56,56},

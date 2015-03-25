@@ -1,15 +1,18 @@
 Animation = {}
 Animation.__index = Animation
 
-function Animation.new(spritesheetData, frames, settings, owner, onFinishCallback)
-    -- required spritesheetData:  A SpritesheetData object.
+function Animation.new(spritesheetImagePath, frameWidth, frameHeight, frames, settings)
+    -- required string spritesheetImagePath: The path to the spritesheet file.
     --
-    -- required frames: A list of frame objects which must have the following fields:
-    --  - integer x: x-coordinate in the spritesheet.
-    --  - integer y: y-coordinate in the spritesheet.
-    --  And may have any of the following fields:
-    --  - float duration: frame duration in seconds.
-    --  - string callback: the name of a function to call on the animation's owner when the frame is played.
+    -- required integer frameWidth: The width in pixels of a frame in the spritesheet.
+    --
+    -- required integer frameHeight
+    --
+    -- required frames: A sequence of frame objects. 
+    --  - required integer x: x-coordinate in the spritesheet.
+    --  - required integer y: y-coordinate in the spritesheet.
+    --  - optional float duration: frame duration in seconds.
+    --  - optional string callback: the name of a function to call on the animation's owner when the frame is played.
     --  
     -- optional settings: 
     --  - float defaultDuration: the default duration in seconds for frames.
@@ -19,9 +22,16 @@ function Animation.new(spritesheetData, frames, settings, owner, onFinishCallbac
     --  - integer playingDirection: either 1 or -1. If 1, advance forwards through the frames. If -1 then start at the end and go backwards.
     --  - table owner: Any table is a valid owner. Frames which have callbacks will attempt to call a field on the owner.
     --  - function onFinishCallback: Call this when the animation finishes.
+    --  - string name: The animation's name.
     
-    if not spritesheetData then
-        print "[ERROR] Animation.new - spritesheetData was nil. Returning nil."
+    if not spritesheetImagePath then
+        print "[ERROR] Animation.new - spritesheetImagePath was nil. Returning nil."
+        return nil
+    elseif not frameWidth then
+        print "[ERROR] Animation.new - no frameWidth was given. Returning nil."
+        return nil
+    elseif not frameHeight then
+        print "[ERROR] Animation.new - no frameHeight was given. Returning nil."
         return nil
     elseif not frames then
         print "[ERROR] Animation.new - no frames were given. Returning nil."
@@ -32,15 +42,14 @@ function Animation.new(spritesheetData, frames, settings, owner, onFinishCallbac
     end
     
     local self = {}
-    self.spritesheetData  = spritesheetData
-    self.frames           = frames
 
     -- Default settings: 
-    self.defaultDuration         = 0.2
-    self.loop                    = true 
-    self.bounce                  = false
+    self.defaultDuration = 0.2
+    self.loop = true 
+    self.bounce = false
     self.initialPlayingDirection = 1
-    self.drawOnFinish            = true
+    self.drawOnFinish = true
+    self.name = ""
  
     -- Override defaults if present in settings
     if settings then
@@ -51,27 +60,107 @@ function Animation.new(spritesheetData, frames, settings, owner, onFinishCallbac
         if settings.drawOnFinish ~= nil then self.drawOnFinish            = settings.drawOnFinish     end
         if settings.owner               then self.owner                   = settings.owner            end
         if settings.onFinishCallback    then self.onFinishCallback        = settings.onFinishCallback end
+        if settings.name                then self.name                    = settings.name             end
     end
 
-    -- Internal settings:
-    self.numFrames         = #frames
-    self.width             = spritesheetData.frameWidth
-    self.height            = spritesheetData.frameHeight
-    self.playing           = false
+    self.spritesheet = {}
+    self.spritesheet.imagePath = spritesheetImagePath
+    self.spritesheet.frameWidth = frameWidth
+    self.spritesheet.frameHeight = frameHeight
+    self.spritesheet.image = love.graphics.newImage(spritesheetImagePath)
+    self.spritesheet.imageWidth = self.spritesheet.image:getWidth()
+    self.spritesheet.imageHeight = self.spritesheet.image:getHeight()
+    self.spritesheet.numCols = self.spritesheet.imageWidth / frameWidth
+    self.spritesheet.numRows = self.spritesheet.imageHeight / frameHeight
+
+    self.frames = frames
+    self.numFrames = #frames
+    self.width = self.spritesheet.frameWidth
+    self.height = self.spritesheet.frameHeight
+    self.playing = false
     if self.initialPlayingDirection == 1 then
         self.currentFrameIndex = 1
     else
         self.currentFrameIndex = #frames
     end
     self.currentPlayingDirection = self.initialPlayingDirection
-    self.durationTimer           = self.frames[self.currentFrameIndex].duration or self.defaultDuration 
+    self.durationTimer = self.frames[self.currentFrameIndex].duration or self.defaultDuration 
 
     setmetatable(self, Animation)
+    self:_setCurrentFrameQuad()
+
     return self 
+end
+
+-- Loads the animation from a file generated by lovemachine.
+-- Expects a full file path, e.g. Animations/hero_animation.lua
+-- The file should return a table that looks like this:
+-- {
+--      spritesheetImagePath = "hero_spritesheet_64x64.png",
+--      frameWidth = 64,
+--      frameHeight = 64,
+--      frames = {{x=1, y=2, duration=0.1, callback="footsteps"}, ... },
+--      animationSettings = { ... },
+-- }
+function Animation.newFromFile(file_path, settings)
+    print(string.format("Creating new animation from %s.", file_path))
+    if not love.filesystem.exists(file_path) then
+        print(string.format("Animation.newFromFile - file '%s' does not exist.", file_path))
+        return nil
+    end
+
+    local chunk = love.filesystem.load(file_path)
+    if not chunk then
+        print "Could not load chunk."
+        return nil
+    end
+
+    local animationData = chunk()
+    if not animationData then
+        print "Could not parse file."
+        return nil
+    end
+
+    local imagePath = animationData.imagePath
+    local frameWidth = animationData.frameWidth
+    local frameHeight = animationData.frameHeight
+    local frames = animationData.frames
+    local animationSettings = animationData.animationSettings
+
+    if not imagePath then
+        print "Table in file was missing a required field: imagePath"
+        return nil
+    elseif not frameWidth then
+        print "Table in file was missing a required field: frameWidth"
+        return nil
+    elseif not frameHeight then
+        print "Table in file was missing a required field: frameHeight"
+        return nil
+    elseif not frames then
+        print "Table in file was missing a required field: frames"
+        return nil
+    elseif not animationSettings then
+        print "Table in file was missing a required field: animationSettings"
+        return nil
+    end
+
+    print "File loaded successfully."
+    
+    -- Merge the two settings objects together, giving priority to the one passed to the function.
+    if settings then
+        for key, value in pairs(settings) do
+            animationSettings[key] = value
+        end
+    end
+
+    return Animation.new(imagePath, frameWidth, frameHeight, frames, animationSettings)
 end
 
 function Animation:update(dt)
     if not self.playing then return end
+
+    -- No need to update anything if there's only 1 frame.
+    if self.numFrames == 1 then return end 
 
     self.durationTimer = self.durationTimer - dt
     if self.durationTimer < 0 then 
@@ -133,7 +222,7 @@ end
 
 function Animation:draw(x,y)
     if self.playing or self.drawOnFinish then
-        love.graphics.draw(self.spritesheetData.image, self.currentFrameQuad, x, y)
+        love.graphics.draw(self.spritesheet.image, self.currentFrameQuad, x, y)
     end
 end
 
@@ -170,10 +259,10 @@ end
 
 function Animation:_setCurrentFrameQuad()
     -- By storing the quad it doesn't have to be recomputed all the time:
-    local currentFrame = self.frames[ self.currentFrameIndex ]
-    local frameWidth, frameHeight = self.spritesheetData.frameWidth, self.spritesheetData.frameHeight
-    local imageWidth, imageHeight = self.spritesheetData.imageWidth, self.spritesheetData.imageHeight
+    local frameWidth, frameHeight = self.spritesheet.frameWidth, self.spritesheet.frameHeight
+    local imageWidth, imageHeight = self.spritesheet.imageWidth, self.spritesheet.imageHeight
 
+    local currentFrame = self.frames[ self.currentFrameIndex ]
     local frame_x = (currentFrame.x - 1) * frameWidth
     local frame_y = (currentFrame.y - 1) * frameHeight
 

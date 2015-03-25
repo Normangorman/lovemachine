@@ -5,10 +5,18 @@ SpritesheetWidget = {}
 SpritesheetWidget.__index = SpritesheetWidget
 setmetatable(SpritesheetWidget, Widget)
 
-function SpritesheetWidget.new(panel, data, x, y)
-    self = Widget.new(x,y, data.image:getDimensions())
-    self.data = data -- a SpritesheetData table
+function SpritesheetWidget.new(panel, imagePath, frameWidth, frameHeight, x, y)
+    local spritesheetImage = love.graphics.newImage(imagePath)
+
+    self = Widget.new(x,y, spritesheetImage:getDimensions())
     self.panel = panel -- the SpritesheetPanel
+    self.spritesheet = {} 
+    self.spritesheet.imagePath = imagePath
+    self.spritesheet.image = spritesheetImage
+    self.spritesheet.frameWidth = frameWidth
+    self.spritesheet.frameHeight = frameHeight
+    self.spritesheet.numCols = self.width / frameWidth
+    self.spritesheet.numRows = self.height / frameHeight
 
     self.frameSelectedColor = Settings.spritesheetFrameSelectedColor
     self.frameNumberColor = Settings.spritesheetFrameNumberColor
@@ -16,6 +24,7 @@ function SpritesheetWidget.new(panel, data, x, y)
     self.mouseoverFrameColor = Settings.spritesheetMouseoverFrameColor
     self.frameSelectedBorderColor = Settings.spritesheetFrameSelectedBorderColor
     self.frameSelectedFillColor = Settings.spritesheetFrameSelectedFillColor
+    self.mouseoverFrame = {x=0, y=0}
 
     self.selectedFrames = {}
     self.animationSettings = {
@@ -23,8 +32,8 @@ function SpritesheetWidget.new(panel, data, x, y)
         bounce = false,
         drawOnFinish = true,
         defaultDuration = Settings.defaultAnimationFrameDuration,
+        name = "",
     }
-    self.mouseoverFrame = {x=0, y=0}
 
     setmetatable(self, SpritesheetWidget)
     return self
@@ -36,14 +45,14 @@ end
 
 function SpritesheetWidget:draw()
     love.graphics.setColor(255,255,255)
-    love.graphics.draw(self.data.image, self.x, self.y)
+    love.graphics.draw(self.spritesheet.image, self.x, self.y)
     self:drawGrid()
 
     -- Highlighted the mouseover'd frame if it exists
     if self.mouseoverFrame.x > 0 and self.mouseoverFrame.y > 0 then
         local fx, fy = self:frameCoordsToPosition( self.mouseoverFrame.x, self.mouseoverFrame.y )
         love.graphics.setColor( unpack(self.mouseoverFrameColor) )
-        love.graphics.rectangle("fill", fx,fy, self.data.frameWidth, self.data.frameHeight)
+        love.graphics.rectangle("fill", fx,fy, self.spritesheet.frameWidth, self.spritesheet.frameHeight)
         love.graphics.setColor(255,255,255)
     end
 
@@ -53,11 +62,11 @@ function SpritesheetWidget:draw()
 
         -- Border:
         love.graphics.setColor( unpack(self.frameSelectedBorderColor) )
-        love.graphics.rectangle("line", fx, fy, self.data.frameWidth, self.data.frameHeight) 
+        love.graphics.rectangle("line", fx, fy, self.spritesheet.frameWidth, self.spritesheet.frameHeight) 
 
         -- Transparent inner fill:
         love.graphics.setColor( unpack(self.frameSelectedFillColor) )
-        love.graphics.rectangle("fill", fx, fy, self.data.frameWidth, self.data.frameHeight) 
+        love.graphics.rectangle("fill", fx, fy, self.spritesheet.frameWidth, self.spritesheet.frameHeight) 
 
         -- Number:
         love.graphics.setColor(unpack(self.frameNumberColor))
@@ -72,19 +81,19 @@ function SpritesheetWidget:drawGrid()
     love.graphics.setColor(unpack(self.gridLineColor)) 
 
     -- Vertical lines:
-    for x=self.x, self.x + self.width, self.data.frameWidth do
+    for x=self.x, self.x + self.width, self.spritesheet.frameWidth do
         love.graphics.line(x, self.y, x, self.y + self.height)
     end
     
     -- Horizontal lines:
-    for y=self.y, self.y + self.height, self.data.frameHeight do
+    for y=self.y, self.y + self.height, self.spritesheet.frameHeight do
         love.graphics.line(self.x, y, self.x + self.width, y)
     end
 end
 
 function SpritesheetWidget:frameCoordsToPosition(frame_x, frame_y)
-    local frame_x = self.x + (frame_x - 1) * self.data.frameWidth
-    local frame_y = self.y + (frame_y - 1) * self.data.frameHeight
+    local frame_x = self.x + (frame_x - 1) * self.spritesheet.frameWidth
+    local frame_y = self.y + (frame_y - 1) * self.spritesheet.frameHeight
     return frame_x, frame_y
 end
 
@@ -100,7 +109,7 @@ end
 
 function SpritesheetWidget:toggleFrameSelected(frame_x, frame_y)
     if frame_x < 1 or frame_y < 1 or
-       frame_x > self.data.numCols or frame_y > self.data.numRows then
+       frame_x > self.spritesheet.numCols or frame_y > self.spritesheet.numRows then
        print("SpritesheetWidget:toggleFrameSelected - WARNING tried to toggle a frame outside of the range of the spritesheet.")
        return
     end
@@ -122,8 +131,8 @@ end
 function SpritesheetWidget:mousepressed(mouse_x, mouse_y, button)
     print(string.format("Spritesheet widget clicked at %d, %d", mouse_x, mouse_y))
     -- Assumes the click did fall within the spritesheet's bounding rectangle.
-    local frame_x = math.ceil((mouse_x - self.x) / self.data.frameWidth)
-    local frame_y = math.ceil((mouse_y - self.y) / self.data.frameHeight)
+    local frame_x = math.ceil((mouse_x - self.x) / self.spritesheet.frameWidth)
+    local frame_y = math.ceil((mouse_y - self.y) / self.spritesheet.frameHeight)
     print(string.format("Frame clicked - x: %d, y %d", frame_x, frame_y))
 
     -- Allow multiple frames to be selected if shift is held
@@ -163,8 +172,8 @@ function SpritesheetWidget:mousepressed(mouse_x, mouse_y, button)
 end
 
 function SpritesheetWidget:mouseover(mx, my)
-    local frame_x = math.ceil((mx - self.x) / self.data.frameWidth)
-    local frame_y = math.ceil((my - self.y) / self.data.frameHeight)
+    local frame_x = math.ceil((mx - self.x) / self.spritesheet.frameWidth)
+    local frame_y = math.ceil((my - self.y) / self.spritesheet.frameHeight)
 
     -- Check if the frame is already selected, if not then highlight it.
     local frameAlreadySelected = self:isFrameSelected(frame_x, frame_y)

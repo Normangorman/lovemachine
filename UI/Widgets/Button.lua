@@ -73,8 +73,8 @@ function Button:mouseover(mx,my)
 end
 
 function Button:mousepressed(mx,my,button)
-    print("button mousepresesd")
     if button == "l" and self.callback then
+        print("Calling button callback.")
         self.callback()
     end
 end
