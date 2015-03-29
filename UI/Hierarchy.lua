@@ -50,7 +50,7 @@ function Hierarchy:mousepressed(x,y,button)
         local widget = self.widgets[i]
         if self:checkCollision(x, y, widget) then
             widget:mousepressed(x, y, button)
-            return true
+            return true, widget
         end
     end
     return false

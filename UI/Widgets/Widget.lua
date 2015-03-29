@@ -27,11 +27,23 @@ function Widget:textinput(text) end
 function Widget:translate(x,y)
     self.x = self.x + x
     self.y = self.y + y
+    return self
 end
 
 function Widget:setPosition(x,y)
     self.x = x
     self.y = y
+    return self
+end
+
+function Widget:setWidth(width)
+    self.width = width
+    return self
+end
+
+function Widget:setHeight(height)
+    self.height = height
+    return self
 end
 
 function Widget:delete()

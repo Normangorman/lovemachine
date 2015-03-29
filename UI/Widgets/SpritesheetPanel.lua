@@ -13,9 +13,10 @@ SpritesheetPanel = {}
 SpritesheetPanel.__index = SpritesheetPanel
 setmetatable(SpritesheetPanel, Panel)
 
-function SpritesheetPanel.new()
-    local self = Panel.new(love.window.getWidth() * 0.75, 0,
-                           love.window.getWidth() * 0.25, love.window.getHeight())
+function SpritesheetPanel.new(x, y)
+    local width = love.window.getWidth() - x
+    local height = love.window.getHeight() - y
+    local self = Panel.new(x, y, width, height)
 
     self.spritesheetWidget = nil
     self.selectedFrame = {x=0, y=0}

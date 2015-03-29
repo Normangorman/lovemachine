@@ -27,6 +27,15 @@ Settings = {
     spritesheetFrameNumberColor = {255,255,255},
     spritesheetMouseoverFrameColor = {255,255,125,50},
 
+    tabsActiveTabColor = {160,133,133},
+    tabsMouseoverTabColor = {99,91,91},
+    tabsInactiveTabColor = {89,81,81},
+    tabsTabHeight = 20,
+    tabsTabSpacing = 5,
+    tabsHorizontalTextPadding = 2,
+    tabsVerticalTextPadding = 2,
+    tabsCornerWidth = 6,
+
     textInputPadding = 2,
     textInputBorderWidth = 1,
     textInputBackgroundColor = {52,56,56},

@@ -1,5 +1,7 @@
 require "UI.UIManager"
-require "UI.Widgets.Workspace" 
+require "UI.Widgets.SpritesheetWorkspace" 
+require "UI.Widgets.Tabs"
+require "UI.Widgets.Text"
 
 local UI
 
@@ -10,14 +12,16 @@ function love.load()
     UI = UIManager.new()
 	UI:registerEvents()
 
-    local workspace = Workspace.new(0,0, love.window.getWidth(), love.window.getHeight())
-    UI:addWidget(workspace)
-end
 
-function love.keypressed(key)
-    if key == 'a' then
-        UI:addWidget(AlertWindow.new("FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO FOO"))
-    end
+    local workspaceTabs = Tabs.new(0,0,love.window.getDimensions())
+    UI:addWidget(workspaceTabs)
+    local x, y = workspaceTabs.innerX, workspaceTabs.innerY
+
+    workspaceTabs:createTab("Spritesheets")
+    workspaceTabs:addWidget("Spritesheets", SpritesheetWorkspace.new(x, y))
+
+    workspaceTabs:createTab("Controllers")
+    workspaceTabs:addWidget("Controllers", Text.new("Hello world!", x+10, y+10, 300))
 end
 
 function love.update(dt)
