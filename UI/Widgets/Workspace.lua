@@ -78,6 +78,7 @@ function Workspace:draw()
         for y=0, self.maxHeight, 100 do
             love.graphics.line(0,y, self.maxWidth,y)
         end
+        love.graphics.setColor(255,255,255)
 
         self.hierarchy:draw()
     end)

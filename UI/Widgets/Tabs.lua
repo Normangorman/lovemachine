@@ -76,7 +76,6 @@ function Tab:draw()
 end
 
 function Tab:mouseover(mx, my)
-    print(string.format("Tab %d was mouseovered.", self._id))
     self.isMouseover = true
     self.hierarchy:mouseover(mx, my)
 end
@@ -136,6 +135,13 @@ end
 
 function Tabs:draw()
     self.hierarchy:draw()
+
+    love.graphics.setLineWidth(1)
+    local y = self.y + self.tabHeight - 1
+    love.graphics.setColor( unpack(Settings.tabsActiveTabColor) )
+    love.graphics.line(self.x, y, self.x + self.width, y)
+    love.graphics.setColor(255,255,255,255)
+    love.graphics.setLineWidth(1)
 end
 
 function Tabs:mouseover(mx, my)
@@ -188,6 +194,7 @@ function Tabs:setActiveTab(tab)
 
     self.activeTab = tab
     tab.active = true
+    self.hierarchy:elevateWidget(tab._id)
 end
 
 function Tabs:createTab(tabName)

@@ -1,6 +1,8 @@
 Settings = {
     animationPlayerBackgroundColor = {42,46,46},
     animationSaveFolderName = "Animations",
+
+    applicationBackgroundColor = {42,46,46},
     
     buttonBorderColor = {160,133,133},
     buttonBackgroundColor = {52,56,56},
@@ -31,7 +33,7 @@ Settings = {
     tabsMouseoverTabColor = {99,91,91},
     tabsInactiveTabColor = {89,81,81},
     tabsTabHeight = 20,
-    tabsTabSpacing = 5,
+    tabsTabSpacing = -3,
     tabsHorizontalTextPadding = 2,
     tabsVerticalTextPadding = 2,
     tabsCornerWidth = 6,

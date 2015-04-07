@@ -6,8 +6,8 @@ require "UI.Widgets.Widget"
 require "UI.Widgets.Workspace"
 
 SpritesheetWorkspace = {}
-SpritesheetWorkspace.__index = Workspace
-setmetatable(SpritesheetWorkspace, Widget)
+SpritesheetWorkspace.__index = SpritesheetWorkspace
+setmetatable(SpritesheetWorkspace, Workspace)
 
 function SpritesheetWorkspace.new(x, y)
     local width = love.window.getWidth() - x
