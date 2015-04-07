@@ -58,8 +58,7 @@ function Window:update(dt)
     if self.draggable and self.beingDragged then
         mx, my = love.mouse.getPosition()
         dx, dy = mx - self.oldMousePosition.x, my - self.oldMousePosition.y
-        self.x = self.x + dx
-        self.y = self.y + dy
+        self:translate(dx,dy)
         self.hierarchy:translate(dx,dy)
         self.oldMousePosition = {x=mx, y=my}
     end

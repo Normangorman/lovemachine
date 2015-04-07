@@ -2,6 +2,10 @@ Settings = {
     animationPlayerBackgroundColor = {42,46,46},
     animationSaveFolderName = "Animations",
 
+    controllerStateWidth = 200,
+    controllerStateHeight = 100,
+    controllerStateColor = {255,140,0},
+
     applicationBackgroundColor = {42,46,46},
     
     buttonBorderColor = {160,133,133},
