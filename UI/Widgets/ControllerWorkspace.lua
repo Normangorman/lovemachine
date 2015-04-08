@@ -2,6 +2,7 @@ require "UI.Settings"
 require "UI.Widgets.Widget"
 require "UI.Widgets.Workspace"
 require "UI.Widgets.ControllerState"
+require "UI.Widgets.ControllerPanel"
 
 ControllerWorkspace = {}
 ControllerWorkspace.__index = ControllerWorkspace
@@ -13,9 +14,21 @@ function ControllerWorkspace.new(x, y)
 
     local self = Workspace.new(x,y,width,height)
 
-    local animationState = ControllerState.new(100,100)
+    -- Startup widgets:
+    -- Panel:
+    local controllerPanel = ControllerPanel.new(self, x + width * 0.75, y)
+    self.staticHierarchy:addWidget(controllerPanel)
+
+    -- Empty state:
+    local animationState = ControllerState.new(controllerPanel, 100,100)
     self.hierarchy:addWidget(animationState)
+    self.numStates = 1
 
     setmetatable(self, ControllerWorkspace)
     return self
+end
+
+function ControllerWorkspace:addState(newState)
+    self.numStates = self.numStates + 1
+    self.hierarchy:addWidget(newState)
 end

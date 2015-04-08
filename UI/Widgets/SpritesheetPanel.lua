@@ -18,7 +18,7 @@ function SpritesheetPanel.new(x, y)
     local height = love.window.getHeight() - y
     local self = Panel.new(x, y, width, height)
 
-    self.spritesheetWidget = nil
+    self.activeSpritesheet = nil
     self.selectedFrame = {x=0, y=0}
     
     setmetatable(self, SpritesheetPanel)
@@ -29,17 +29,13 @@ function SpritesheetPanel.new(x, y)
     return self
 end
 
-function SpritesheetPanel:update(dt)
-    self.hierarchy:update(dt)
-end
-
-function SpritesheetPanel:setSpritesheetWidget(newWidget)
+function SpritesheetPanel:setActiveSpritesheet(newWidget)
     -- Don't change if the widget is the same as the one that's already set.
     -- check this just by comparing the image paths of the two widget's SpritesheetData objects.
-    if not self.spritesheetWidget or newWidget.spritesheet.imagePath ~= self.spritesheetWidget.spritesheet.imagePath  then
-        print("SpritesheetPanel:setSpritesheetWidget - spritesheetWidget was set.")
+    if not self.activeSpritesheet or newWidget.spritesheet.imagePath ~= self.activeSpritesheet.spritesheet.imagePath  then
+        print("SpritesheetPanel:setActiveSpritesheet - activeSpritesheet was set.")
 
-        self.spritesheetWidget = newWidget 
+        self.activeSpritesheet = newWidget 
         self.selectedFrame = {x=0, y=0}
 
         self:populateSpritesheetWidgets()
@@ -49,16 +45,11 @@ function SpritesheetPanel:setSpritesheetWidget(newWidget)
     end
 end
 
-function SpritesheetPanel:addWidget(w)
-    w:translate(self.x + self.padding, self.y + self.padding)
-    self.hierarchy:addWidget(w)
-end
-
 function SpritesheetPanel:populateSpritesheetWidgets()
     self.hierarchy:clearWidgets()
 
     local maxWidth = self:getMaxWidth()
-    local w = self.spritesheetWidget
+    local w = self.activeSpritesheet
 
     -- Title:
     local titleText = Text.new("Spritesheet selected: ".. w.spritesheet.imagePath, 0, 0, maxWidth)
@@ -69,7 +60,7 @@ function SpritesheetPanel:populateSpritesheetWidgets()
     local spritesheetFrameWidthInput = TextInput.new(0, 55, maxWidth, function(text)
         self:changeFrameWidth(text)
     end) 
-    spritesheetFrameWidthInput:setText(self.spritesheetWidget.spritesheet.frameWidth)
+    spritesheetFrameWidthInput:setText(self.activeSpritesheet.spritesheet.frameWidth)
     self:addWidget(spritesheetFrameWidthInput)
 
     -- Frame height
@@ -77,7 +68,7 @@ function SpritesheetPanel:populateSpritesheetWidgets()
     local spritesheetFrameHeightInput = TextInput.new(0, 95, maxWidth, function(text)
         self:changeFrameHeight(text)
     end)
-    spritesheetFrameHeightInput:setText(self.spritesheetWidget.spritesheet.frameHeight)
+    spritesheetFrameHeightInput:setText(self.activeSpritesheet.spritesheet.frameHeight)
     self:addWidget(spritesheetFrameHeightInput)
 end
 
@@ -96,11 +87,11 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
     
     -- Animation player
     local animation = Animation.new(
-        self.spritesheetWidget.spritesheet.imagePath,
-        self.spritesheetWidget.spritesheet.frameWidth,
-        self.spritesheetWidget.spritesheet.frameHeight,
-        self.spritesheetWidget.selectedFrames,
-        self.spritesheetWidget.animationSettings
+        self.activeSpritesheet.spritesheet.imagePath,
+        self.activeSpritesheet.spritesheet.frameWidth,
+        self.activeSpritesheet.spritesheet.frameHeight,
+        self.activeSpritesheet.selectedFrames,
+        self.activeSpritesheet.animationSettings
     )
     local animationPlayer = AnimationPlayer.new(animation, 0, ypos)
     animationPlayer:addClasses{"animation_preview", "animation_preview_player"}
@@ -118,7 +109,7 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
         self:changeAnimationSettingName(text)
     end)
     nameInput:addClasses{"animation_preview"}
-    local name = self.spritesheetWidget.animationSettings.name 
+    local name = self.activeSpritesheet.animationSettings.name 
     if name then
         nameInput:setText(name)
     end
@@ -131,7 +122,7 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
     self:addWidget(loopLabel)
 
     -- Loop checkbox
-    local loopSetting = self.spritesheetWidget.animationSettings.loop
+    local loopSetting = self.activeSpritesheet.animationSettings.loop
     local loopCheckbox = Checkbox.new(loopSetting, 120, ypos, function(checkboxState)
         self:changeAnimationSettingLoop(checkboxState)
     end)
@@ -145,7 +136,7 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
     self:addWidget(bounceLabel)
     
     -- Bounce checkbox
-    local bounceSetting = self.spritesheetWidget.animationSettings.bounce
+    local bounceSetting = self.activeSpritesheet.animationSettings.bounce
     local bounceCheckbox = Checkbox.new(bounceSetting, 120, ypos, function(checkboxState)
         self:changeAnimationSettingBounce(checkboxState)
     end)
@@ -159,7 +150,7 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
     self:addWidget(drawOnFinishLabel)
 
     -- Draw on finish checkbox
-    local drawOnFinishSetting = self.spritesheetWidget.animationSettings.drawOnFinish
+    local drawOnFinishSetting = self.activeSpritesheet.animationSettings.drawOnFinish
     local drawOnFinishCheckbox = Checkbox.new(drawOnFinishSetting, 120, ypos, function(checkboxState)
         self:changeAnimationSettingDrawOnFinish(checkboxState)
     end)
@@ -173,7 +164,7 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
     self:addWidget(defaultDurationLabel)
     
     -- Default duration input
-    local defaultDurationSetting = self.spritesheetWidget.animationSettings.defaultDuration 
+    local defaultDurationSetting = self.activeSpritesheet.animationSettings.defaultDuration 
     local defaultDurationInput = TextInput.new(120, ypos, 60, function(text)
         self:changeAnimationSettingDefaultDuration(text)
     end)
@@ -186,7 +177,7 @@ function SpritesheetPanel:populateAnimationPreviewWidgets()
 
     -- Save animation button
     -- Located at the bottom of the panel, so not in the usual area.
-    local saveAnimationButton = Button.new(0, love.window.getHeight() - 60, maxWidth, 50, {
+    local saveAnimationButton = Button.new(0, love.window.getHeight() - 80, maxWidth, 50, {
         callback=function() self:saveAnimation() end,
         text = "Save animation"
     })
@@ -203,16 +194,16 @@ function SpritesheetPanel:refreshAnimationPreview()
     local player = playerList[1]
 
     local newAnimation = Animation.new(
-        self.spritesheetWidget.spritesheet.imagePath,
-        self.spritesheetWidget.spritesheet.frameWidth,
-        self.spritesheetWidget.spritesheet.frameHeight,
-        self.spritesheetWidget.selectedFrames,
-        self.spritesheetWidget.animationSettings
+        self.activeSpritesheet.spritesheet.imagePath,
+        self.activeSpritesheet.spritesheet.frameWidth,
+        self.activeSpritesheet.spritesheet.frameHeight,
+        self.activeSpritesheet.selectedFrames,
+        self.activeSpritesheet.animationSettings
     )
     player:changeAnimation(newAnimation)
 
     print("Animation settings:")
-    for k, v in pairs(self.spritesheetWidget.animationSettings) do
+    for k, v in pairs(self.activeSpritesheet.animationSettings) do
         print(k,v)
     end
 end
@@ -233,9 +224,9 @@ function SpritesheetPanel:populateSelectedFrameWidgets()
 
     -- Frame image
     local animation = Animation.new(
-        self.spritesheetWidget.spritesheet.imagePath,
-        self.spritesheetWidget.spritesheet.frameWidth,
-        self.spritesheetWidget.spritesheet.frameHeight,
+        self.activeSpritesheet.spritesheet.imagePath,
+        self.activeSpritesheet.spritesheet.frameWidth,
+        self.activeSpritesheet.spritesheet.frameHeight,
         {self.selectedFrame}
     )
     self.selectedFrameImage = AnimationPlayer.new(animation, 0, ypos)
@@ -287,14 +278,14 @@ function SpritesheetPanel:addFrame(frameCoords)
 
     -- If this is the first frame, then create all the animation preview widgets.
     -- If not, then just change the frames of the animation that's playing.
-    if #self.spritesheetWidget.selectedFrames == 1 then
+    if #self.activeSpritesheet.selectedFrames == 1 then
         self:populateAnimationPreviewWidgets()
     else
         self:refreshAnimationPreview()
     end
 
     print("Selected frames:")
-    for _, frame in ipairs(self.spritesheetWidget.selectedFrames) do
+    for _, frame in ipairs(self.activeSpritesheet.selectedFrames) do
         for k, v in pairs(frame) do
             print(k, v)
         end
@@ -316,7 +307,7 @@ function SpritesheetPanel:removeFrame(frameCoords)
     end
 
     -- If no frames remain, remove the animation preview widgets.
-    if #self.spritesheetWidget.selectedFrames == 0 then
+    if #self.activeSpritesheet.selectedFrames == 0 then
         self.hierarchy:deleteWidgetsWithClass("animation_preview")
     else
         self:refreshAnimationPreview()
@@ -327,7 +318,7 @@ function SpritesheetPanel:changeFrameWidth(text)
     print("SpritesheetPanel:changeFrameWidth was called with text="..text)
     local num = tonumber(text)
     if num then
-        self.spritesheetWidget.spritesheet.frameWidth = num
+        self.activeSpritesheet.spritesheet.frameWidth = num
     else
         print("Couldn't parse text as num")
     end
@@ -336,14 +327,14 @@ end
 function SpritesheetPanel:changeFrameHeight(text)
     local num = tonumber(text)
     if num then
-        self.spritesheetWidget.spritesheet.frameHeight = num
+        self.activeSpritesheet.spritesheet.frameHeight = num
     end
 end
 
 function SpritesheetPanel:changeFrameDuration(text)
     local num = tonumber(text)
     if num then
-        for _, f in ipairs(self.spritesheetWidget.selectedFrames) do
+        for _, f in ipairs(self.activeSpritesheet.selectedFrames) do
             if f.x == self.selectedFrame.x and f.y == self.selectedFrame.y then
                 f.duration = num
             end
@@ -356,17 +347,17 @@ function SpritesheetPanel:changeFrameCallback(text)
 end
 
 function SpritesheetPanel:changeAnimationSettingLoop(checkboxState)
-    self.spritesheetWidget.animationSettings.loop = checkboxState
+    self.activeSpritesheet.animationSettings.loop = checkboxState
     self:refreshAnimationPreview()
 end
 
 function SpritesheetPanel:changeAnimationSettingBounce(checkboxState)
-    self.spritesheetWidget.animationSettings.bounce = checkboxState
+    self.activeSpritesheet.animationSettings.bounce = checkboxState
     self:refreshAnimationPreview()
 end
 
 function SpritesheetPanel:changeAnimationSettingDrawOnFinish(checkboxState)
-    self.spritesheetWidget.animationSettings.drawOnFinish = checkboxState
+    self.activeSpritesheet.animationSettings.drawOnFinish = checkboxState
     self:refreshAnimationPreview()
 end
 
@@ -374,19 +365,19 @@ function SpritesheetPanel:changeAnimationSettingDefaultDuration(text)
     local num = tonumber(text)
     if num then
         print "Chaning default duration..."
-        self.spritesheetWidget.animationSettings.defaultDuration = num
+        self.activeSpritesheet.animationSettings.defaultDuration = num
         self:refreshAnimationPreview()
     end
 end
 
 function SpritesheetPanel:changeAnimationSettingName(text)
-    self.spritesheetWidget.animationSettings.name = text
+    self.activeSpritesheet.animationSettings.name = text
 end
 
 function SpritesheetPanel:saveAnimation()
     print "Saving animation..."
 
-    local sw = self.spritesheetWidget
+    local sw = self.activeSpritesheet
     local animationTable = {
         imagePath = sw.spritesheet.imagePath,
         frameWidth = sw.spritesheet.frameWidth,

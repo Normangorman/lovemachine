@@ -17,8 +17,8 @@ function Workspace.new(x,y,width,height)
     self.maxWidth = window_width * 1.2
     self.maxHeight = window_height  * 1.2
     self.cameraPosition = {
-        x = self.maxWidth / 2 - window_width / 2,
-        y = self.maxHeight / 2 - window_height / 2
+        x = math.floor(self.maxWidth / 2 - window_width / 2),
+        y = math.floor(self.maxHeight / 2 - window_height / 2)
     }
 
     self.beingDragged = false

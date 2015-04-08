@@ -27,10 +27,9 @@ function Panel:draw()
     self.hierarchy:draw()
 end
 
-function Panel:addWidget(widget)
-    widget.x = widget.x + self.x
-    widget.y = widget.y + self.y
-    self.hierarchy:addWidget(widget)
+function Panel:addWidget(w)
+    w:translate(self.x + self.padding, self.y + self.padding)
+    self.hierarchy:addWidget(w)
 end
 
 function Panel:mouseover(mx, my)

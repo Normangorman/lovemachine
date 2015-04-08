@@ -6,8 +6,9 @@ ControllerState = {}
 ControllerState.__index = ControllerState
 setmetatable(ControllerState, Widget)
 
-function ControllerState.new(x,y)
+function ControllerState.new(panel, x,y)
     local self = Widget.new(x,y, Settings.controllerStateWidth, Settings.controllerStateHeight)
+    self.panel = panel
     self.name = "State0"
     self.color = Settings.controllerStateColor
     self.beingDragged = false
@@ -55,6 +56,7 @@ end
 
 function ControllerState:mousepressed(_, _, button)
     if button == 'l' then
+        self.panel:setActiveState(self)
         self.beingDragged = true
         self.oldMousePosition = {x = love.mouse.getX(), y = love.mouse.getY()}
     end

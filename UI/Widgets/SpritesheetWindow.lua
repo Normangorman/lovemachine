@@ -17,7 +17,7 @@ function SpritesheetWindow.new(panel, imagePath, frameWidth, frameHeight, x, y)
 end
 
 function SpritesheetWindow:mousepressed(mx, my, button)
-    self.panel:setSpritesheetWidget(self.spritesheetWidget)
+    self.panel:setActiveSpritesheet(self.spritesheetWidget)
 
     Window.mousepressed(self, mx, my, button)
 end
