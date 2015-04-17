@@ -3,6 +3,7 @@ require "UI.Widgets.AlertWindow"
 require "UI.Widgets.AnimationPlayer"
 require "UI.Widgets.Checkbox"
 require "UI.Widgets.Panel"
+require "UI.Widgets.SpritesheetWindow"
 require "UI.Widgets.Text"
 require "UI.Widgets.TextInput"
 require "UI.Widgets.Widget"
@@ -13,18 +14,18 @@ SpritesheetPanel = {}
 SpritesheetPanel.__index = SpritesheetPanel
 setmetatable(SpritesheetPanel, Panel)
 
-function SpritesheetPanel.new(x, y)
+function SpritesheetPanel.new(workspace, x, y)
     local width = love.window.getWidth() - x
     local height = love.window.getHeight() - y
     local self = Panel.new(x, y, width, height)
 
     self.activeSpritesheet = nil
     self.selectedFrame = {x=0, y=0}
+    self.workspace = workspace
     
     setmetatable(self, SpritesheetPanel)
 
-    self.titleText = Text.new("No spritesheet selected.", 0, 0, self:getMaxWidth())
-    self:addWidget(self.titleText)
+    self:populateBaseWidgets()
 
     return self
 end
@@ -45,38 +46,77 @@ function SpritesheetPanel:setActiveSpritesheet(newWidget)
     end
 end
 
+function SpritesheetPanel:populateBaseWidgets()
+    local maxWidth = self:getMaxWidth()
+    local ypos = 0
+    local fontHeight = love.graphics.getFont():getHeight()
+
+    self.titleText = Text.new("No spritesheet selected.", 0, ypos, maxWidth)
+    self:addWidget(self.titleText)
+    self.titleText:addClasses{"base"}
+    ypos = ypos + fontHeight + 5
+
+    local spritesheetPathLabel = Text.new("Spritesheet file path:", 0, ypos, maxWidth)
+    self:addWidget(spritesheetPathLabel)
+    spritesheetPathLabel:addClasses{"base"}
+    ypos = ypos + fontHeight + 5
+
+    self.spritesheetPathInput = TextInput.new(0, ypos, maxWidth)
+    self:addWidget(self.spritesheetPathInput)
+    self.spritesheetPathInput:addClasses{"base"}
+    ypos = ypos + self.spritesheetPathInput.height + 5
+
+    local loadSpritesheetButton = Button.new(0, ypos, maxWidth, 20, {
+        text = "Load spritesheet",
+        callback = function() self:loadSpritesheet(self.spritesheetPathInput:getText()) end
+    })
+    self:addWidget(loadSpritesheetButton)
+    loadSpritesheetButton:addClasses{"base"}
+end
+
 function SpritesheetPanel:populateSpritesheetWidgets()
-    self.hierarchy:clearWidgets()
+    -- Delete the old widgets if there are any.
+    self.hierarchy:deleteWidgetsWithClass("spritesheet")
 
     local maxWidth = self:getMaxWidth()
     local w = self.activeSpritesheet
+    local ypos = 90 
 
-    -- Title:
-    local titleText = Text.new("Spritesheet selected: ".. w.spritesheet.imagePath, 0, 0, maxWidth)
-    self:addWidget(titleText)
+    -- Title: (assumes self.titleText already set)
+    self.titleText:setText("Spritesheet selected: ".. w.spritesheet.imagePath)
 
     -- Frame width
-    self:addWidget(Text.new("Frame width:", 0, 40, maxWidth))
-    local spritesheetFrameWidthInput = TextInput.new(0, 55, maxWidth, function(text)
+    local frameWidthLabel = Text.new("Frame width:", 0, ypos, maxWidth)
+    self:addWidget(frameWidthLabel)
+    frameWidthLabel:addClasses{"spritesheet"}
+    ypos = ypos + frameWidthLabel.height
+
+    local frameWidthInput = TextInput.new(0, ypos, maxWidth, function(text)
         self:changeFrameWidth(text)
     end) 
-    spritesheetFrameWidthInput:setText(self.activeSpritesheet.spritesheet.frameWidth)
-    self:addWidget(spritesheetFrameWidthInput)
+    frameWidthInput:setText(self.activeSpritesheet.spritesheet.frameWidth)
+    self:addWidget(frameWidthInput)
+    frameWidthInput:addClasses{"spritesheet"}
+    ypos = ypos + frameWidthInput.height
 
     -- Frame height
-    self:addWidget(Text.new("Frame height:", 0, 80, maxWidth))
-    local spritesheetFrameHeightInput = TextInput.new(0, 95, maxWidth, function(text)
+    local frameHeightLabel = Text.new("Frame height:", 0, ypos, maxWidth)
+    self:addWidget(frameHeightLabel)
+    frameHeightLabel:addClasses{"spritesheet"}
+    ypos = ypos + frameHeightLabel.height
+
+    local frameHeightInput = TextInput.new(0, ypos, maxWidth, function(text)
         self:changeFrameHeight(text)
     end)
-    spritesheetFrameHeightInput:setText(self.activeSpritesheet.spritesheet.frameHeight)
-    self:addWidget(spritesheetFrameHeightInput)
+    frameHeightInput:setText(self.activeSpritesheet.spritesheet.frameHeight)
+    self:addWidget(frameHeightInput)
+    frameHeightInput:addClasses{"spritesheet"}
 end
 
 function SpritesheetPanel:populateAnimationPreviewWidgets()
-    -- Delete the old widgets if there are any.
     self.hierarchy:deleteWidgetsWithClass("animation_preview")
 
-    local ypos = 135
+    local ypos = 160
     local maxWidth = self:getMaxWidth()
 
     -- Title
@@ -209,7 +249,6 @@ function SpritesheetPanel:refreshAnimationPreview()
 end
 
 function SpritesheetPanel:populateSelectedFrameWidgets()
-    -- Delete the old widgets if there are any.
     self.hierarchy:deleteWidgetsWithClass("selected_frame")
 
     local maxWidth = self:getMaxWidth()
@@ -268,6 +307,13 @@ function SpritesheetPanel:populateSelectedFrameWidgets()
     end
     self:addWidget(frameCallbackInput)
     ypos = ypos + love.graphics.getFont():getHeight() + 5
+end
+
+-- Called by spritesheets in the hierarchy when they are closed.
+function SpritesheetPanel:spritesheetClosed(spritesheet)
+    self.activeSpritesheet = nil
+    self.hierarchy:clearWidgets()
+    self:populateBaseWidgets()
 end
 
 
@@ -416,4 +462,47 @@ function SpritesheetPanel:saveAnimation()
     print(successMessage)
 
     self.hierarchy:addWidgetToRoot(AlertWindow.new(successMessage))
+end
+
+function SpritesheetPanel:loadSpritesheet(filePath)
+    print("SpritesheetPanel:loadSpritesheet was called with filePath="..filePath)
+
+    -- Check that the file exists and it has an appropriate format.
+    local raiseError = function(errorMsg)
+        print(errorMsg)
+        local alertWindow = AlertWindow.new("ERROR: "..errorMsg)
+        self.hierarchy:addWidgetToRoot(alertWindow)
+    end
+
+    local fileExists = love.filesystem.exists(filePath)
+    if not fileExists then
+        raiseError("File does not exist.")
+        return
+    end
+
+    local fileExtension = string.match(filePath, '%.[a-z]+')
+    if fileExtension == nil then
+        raiseError("File has an inappropriate name.")
+        return
+    end
+
+    local appropriateExtension = fileExtension == ".jpg" or fileExtension == ".bmp" or
+                                 fileExtension == ".tga" or fileExtension == ".png"
+    if not appropriateExtension then
+        raiseError("File has an inappropriate format. Acceptable formats are 'jpg', 'bmp', 'tga' or 'png'.")
+        return
+    end
+
+    local testImage = love.graphics.newImage(filePath)
+    if testImage == nil then
+        raiseError("Could not load image.")
+        return
+    end
+
+    local parentWidth, parentHeight = self.workspace.width, self.workspace.height
+    local x = parentWidth / 2 + (love.math.random() - 0.5) * (parentWidth / 4)
+    local y = parentHeight / 2 + (love.math.random() - 0.5) * (parentHeight / 4)
+    local spritesheetWindow = SpritesheetWindow.new(self, filePath, 32, 32, x, y) 
+
+    self.workspace.hierarchy:addWidget(spritesheetWindow)
 end

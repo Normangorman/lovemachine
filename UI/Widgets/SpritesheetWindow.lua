@@ -25,3 +25,8 @@ end
 function SpritesheetWindow:mousereleased(mx, my, button)
     Window.mousereleased(self, mx, my, button)
 end
+
+function SpritesheetWindow:close()
+    self._deleted = true
+    self.panel:spritesheetClosed(self.spritesheetWidget)
+end

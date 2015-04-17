@@ -16,7 +16,7 @@ function SpritesheetWorkspace.new(x, y)
     local self = Workspace.new(x,y,width,height)
     
     -- Startup widgets:
-    local spritesheetPanel = SpritesheetPanel.new(x + width * 0.75, y)
+    local spritesheetPanel = SpritesheetPanel.new(self, x + width * 0.75, y)
     self.staticHierarchy:addWidget(spritesheetPanel)
 
     local hero_image_path = "UI/Assets/hero_60x92.png"
