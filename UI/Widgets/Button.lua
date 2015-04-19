@@ -17,8 +17,16 @@ function Button.new(x,y, width, height, settings)
             end
         end
         if settings.text then
-            local text_y = (self.y + self.height) / 2 - 0.5 * love.graphics.getFont():getHeight()
-            self.textWidget = Text.new(settings.text, self.x, text_y, self.width, "center")
+            local font
+            if settings.textFont then
+                font = settings.textFont
+            else
+                font = love.graphics.getFont()
+            end
+
+            local text_y = self.y + (self.height / 2) - 0.5 * font:getHeight()
+
+            self.textWidget = Text.new(settings.text, self.x, text_y, self.width, "center", nil, font)
         end
         if settings.callback then self.callback = settings.callback end
     end
@@ -34,10 +42,10 @@ end
 
 function Button:update(dt)
     self.isMouseover = false
-    if self.textWidget then
-        local text_y = self.y + 0.5*self.height - 0.5 * love.graphics.getFont():getHeight()
-        self.textWidget:setPosition(self.x, text_y)
-    end
+    --if self.textWidget then
+    --    local text_y = self.y + 0.5*self.height - 0.5 * love.graphics.getFont():getHeight()
+    --    self.textWidget:setPosition(self.x, text_y)
+    --end
 end
 
 function Button:draw()
