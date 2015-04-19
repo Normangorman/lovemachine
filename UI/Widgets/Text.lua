@@ -25,9 +25,18 @@ function Text.new(text, x, y, width, align, color, font)
 end
 
 function Text:draw()
+    local oldFont
+    if self.font then 
+        oldFont = love.graphics.getFont()
+        love.graphics.setFont(self.font)
+    end
     love.graphics.setColor( unpack(self.color) )
     love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
     love.graphics.setColor(255,255,255,255)
+
+    if oldFont then
+        love.graphics.setFont(oldFont)
+    end
 end
 
 function Text:setText(newText)
