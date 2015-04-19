@@ -1,6 +1,3 @@
-require "UI.Settings"
-require "UI.Widgets.Widget"
-
 SpritesheetWidget = {}
 SpritesheetWidget.__index = SpritesheetWidget
 setmetatable(SpritesheetWidget, Widget)

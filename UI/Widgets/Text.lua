@@ -1,6 +1,3 @@
-require "UI.Widgets.Widget"
-require "UI.Settings"
-
 Text = {}
 Text.__index = Text
 setmetatable(Text, Widget)

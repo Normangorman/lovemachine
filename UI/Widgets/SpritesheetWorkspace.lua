@@ -1,10 +1,3 @@
-require "UI.Settings"
-require "UI.Widgets.AnimationPlayer"
-require "UI.Widgets.SpritesheetWindow"
-require "UI.Widgets.SpritesheetPanel"
-require "UI.Widgets.Widget"
-require "UI.Widgets.Workspace"
-
 SpritesheetWorkspace = {}
 SpritesheetWorkspace.__index = SpritesheetWorkspace
 setmetatable(SpritesheetWorkspace, Workspace)

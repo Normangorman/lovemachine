@@ -1,7 +1,3 @@
-require "UI.Hierarchy"
-require "UI.Widgets.Button"
-require "UI.Widgets.Widget"
-
 Window = {}
 Window.__index = Window
 setmetatable(Window, Widget)

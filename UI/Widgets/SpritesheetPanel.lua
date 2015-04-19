@@ -1,13 +1,3 @@
-require "Animation.Animation"
-require "UI.Widgets.AlertWindow"
-require "UI.Widgets.AnimationPlayer"
-require "UI.Widgets.Checkbox"
-require "UI.Widgets.Panel"
-require "UI.Widgets.SpritesheetWindow"
-require "UI.Widgets.Text"
-require "UI.Widgets.TextInput"
-require "UI.Widgets.Widget"
-
 local Filesystem = require "UI.Filesystem"
 
 SpritesheetPanel = {}

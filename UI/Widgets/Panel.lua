@@ -1,6 +1,3 @@
-require "UI.Hierarchy"
-require "UI.Widgets.Widget"
-
 Panel = {}
 Panel.__index = Panel
 setmetatable(Panel, Widget)

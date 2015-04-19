@@ -1,6 +1,3 @@
-require "UI.Widgets.Panel"
-require "UI.Widgets.Widget"
-
 AnimationPanel = {}
 AnimationPanel.__index = AnimationPanel
 setmetatable(AnimationPanel, Panel)

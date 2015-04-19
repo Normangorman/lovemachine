@@ -1,6 +1,3 @@
-require "UI.Widgets.Widget"
-require "UI.Widgets.Text"
-
 Button = {}
 Button.__index = Button
 setmetatable(Button, Widget)

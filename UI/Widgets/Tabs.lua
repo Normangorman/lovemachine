@@ -1,7 +1,3 @@
-require "UI.Hierarchy"
-require "UI.Settings"
-require "UI.Widgets.Widget"
-
 -- Tab is a private class. To make some tabs create a Tabs object with Tabs.new then call Tabs:createTab.
 local Tab = {}
 Tab.__index = Tab

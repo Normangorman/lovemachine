@@ -1,9 +1,3 @@
-require "UI.Widgets.Button"
-require "UI.Widgets.ControllerState"
-require "UI.Widgets.Widget"
-require "UI.Widgets.Panel"
-require "UI.Settings"
-
 ControllerPanel = {}
 ControllerPanel.__index = ControllerPanel
 setmetatable(ControllerPanel, Panel)

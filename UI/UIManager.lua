@@ -1,5 +1,3 @@
-require "UI.Hierarchy"
-
 UIManager = {}
 UIManager.__index = UIManager
 

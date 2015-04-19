@@ -1,6 +1,3 @@
-require "UI.Widgets.Widget"
-require "UI.Settings"
-
 Checkbox = {}
 Checkbox.__index = Checkbox
 setmetatable(Checkbox, Widget)

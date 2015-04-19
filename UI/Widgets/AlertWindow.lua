@@ -1,8 +1,3 @@
-require "UI.Settings"
-require "UI.Widgets.Button"
-require "UI.Widgets.Widget"
-require "UI.Widgets.Window"
-
 AlertWindow = {}
 AlertWindow.__index = AlertWindow
 setmetatable(AlertWindow, Window)

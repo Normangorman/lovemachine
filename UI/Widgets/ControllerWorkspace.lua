@@ -1,9 +1,3 @@
-require "UI.Settings"
-require "UI.Widgets.Widget"
-require "UI.Widgets.Workspace"
-require "UI.Widgets.ControllerState"
-require "UI.Widgets.ControllerPanel"
-
 ControllerWorkspace = {}
 ControllerWorkspace.__index = ControllerWorkspace
 setmetatable(ControllerWorkspace, Workspace)

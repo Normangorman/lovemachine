@@ -1,7 +1,3 @@
-require "UI.Settings"
-require "UI.Widgets.Text"
-require "UI.Widgets.Widget"
-
 TextInput = {}
 TextInput.__index = TextInput
 setmetatable(TextInput, Widget)

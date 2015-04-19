@@ -1,9 +1,29 @@
-require "UI.UIManager"
+require "Animation.Animation"
+require "Animation.AnimationController"
+
+Filesystem = require "UI.Filesystem"
+require "UI.Hierarchy"
 require "UI.Settings"
-require "UI.Widgets.ControllerWorkspace" 
-require "UI.Widgets.SpritesheetWorkspace" 
+require "UI.UIManager"
+
+require "UI.Widgets.AlertWindow"
+require "UI.Widgets.AnimationPanel"
+require "UI.Widgets.Button"
+require "UI.Widgets.Checkbox"
+require "UI.Widgets.ControllerPanel"
+require "UI.Widgets.ControllerState"
+require "UI.Widgets.ControllerWorkspace"
+require "UI.Widgets.Panel"
+require "UI.Widgets.SpritesheetPanel"
+require "UI.Widgets.SpritesheetWidget"
+require "UI.Widgets.SpritesheetWindow"
+require "UI.Widgets.SpritesheetWorkspace"
 require "UI.Widgets.Tabs"
 require "UI.Widgets.Text"
+require "UI.Widgets.TextInput"
+require "UI.Widgets.Widget"
+require "UI.Widgets.Window"
+require "UI.Widgets.Workspace"
 
 local UI
 local backgroundColor = Settings.applicationBackgroundColor

@@ -1,9 +1,3 @@
-require "Animation.Animation"
-require "UI.Hierarchy"
-require "UI.Settings"
-require "UI.Widgets.Widget"
-require "UI.Widgets.Window"
-
 Workspace = {}
 Workspace.__index = Workspace
 

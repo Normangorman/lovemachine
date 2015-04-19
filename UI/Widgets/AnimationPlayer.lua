@@ -1,6 +1,3 @@
-require "UI.Settings"
-require "UI.Widgets.Widget"
-
 AnimationPlayer = {}
 AnimationPlayer.__index = AnimationPlayer
 setmetatable(AnimationPlayer, Widget)

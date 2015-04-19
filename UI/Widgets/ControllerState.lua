@@ -1,7 +1,3 @@
-require "UI.Widgets.Widget"
-require "UI.Widgets.Text"
-require "UI.Settings"
-
 ControllerState = {}
 ControllerState.__index = ControllerState
 setmetatable(ControllerState, Widget)
