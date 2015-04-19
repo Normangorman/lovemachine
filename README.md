@@ -1,3 +1,5 @@
+## Synopsis
+lovemachine
 The save directory is not typically the working directory. These are the default save directories for various platforms:
 
 Windows XP: C:\Documents and Settings\user\Application Data\LOVE\ or %appdata%\LOVE\
